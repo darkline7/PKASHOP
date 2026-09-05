@@ -92,6 +92,96 @@ export async function GET(req: Request) {
       ]);
       return NextResponse.json({ orders, total });
     }
+    if (action === "order_detail") {
+      const orderId = url.searchParams.get("id");
+      if (!orderId) return NextResponse.json({ error: "Thiếu ID đơn hàng" }, { status: 400 });
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          buyer: { select: { id: true, name: true, email: true, phone: true, avatar: true } },
+          seller: { select: { id: true, name: true, email: true, phone: true, bankName: true, bankAccount: true } },
+          items: {
+            include: {
+              product: { select: { id: true, slug: true, title: true, type: true } },
+            },
+          },
+        },
+      });
+      if (!order) return NextResponse.json({ error: "Không tìm thấy đơn hàng" }, { status: 404 });
+      return NextResponse.json({ order });
+    }
+
+
+    if (action === "transactions") {
+      const page = Number(url.searchParams.get("page")) || 1;
+      const type = url.searchParams.get("type") || "";
+      const status = url.searchParams.get("status") || "";
+      const where: any = {};
+      if (type) where.type = type;
+      if (status) where.status = status;
+
+      const [transactions, total] = await Promise.all([
+        prisma.transaction.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * 20,
+          take: 20,
+          include: {
+            user: { select: { id: true, name: true, email: true, avatar: true } },
+          },
+        }),
+        prisma.transaction.count({ where }),
+      ]);
+      return NextResponse.json({ transactions, total });
+    }
+
+    if (action === "withdrawals") {
+      const page = Number(url.searchParams.get("page")) || 1;
+      const status = url.searchParams.get("status") || "";
+      const where: any = { type: "WITHDRAW" };
+      if (status) where.status = status;
+
+      const [withdrawals, total] = await Promise.all([
+        prisma.transaction.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * 20,
+          take: 20,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+                bankName: true,
+                bankAccount: true,
+                bankAccountName: true,
+                walletBalance: true,
+              },
+            },
+          },
+        }),
+        prisma.transaction.count({ where }),
+      ]);
+      return NextResponse.json({ withdrawals, total });
+    }
+
+    if (action === "audit_logs") {
+      const page = Number(url.searchParams.get("page")) || 1;
+      const [logs, total] = await Promise.all([
+        prisma.auditLog.findMany({
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * 20,
+          take: 20,
+          include: {
+            admin: { select: { id: true, name: true, email: true } },
+          },
+        }),
+        prisma.auditLog.count(),
+      ]);
+      return NextResponse.json({ logs, total });
+    }
 
     if (action === "categories") {
       const categories = await prisma.category.findMany({
@@ -168,6 +258,65 @@ export async function PATCH(req: Request) {
       });
       return NextResponse.json({ success: true });
     }
+    if (action === "approve_withdrawal") {
+      const txn = await prisma.transaction.findUnique({ where: { id } });
+      if (!txn || txn.type !== "WITHDRAW") {
+        return NextResponse.json({ error: "Không tìm thấy yêu cầu rút tiền" }, { status: 404 });
+      }
+      await prisma.transaction.update({
+        where: { id },
+        data: { status: "SUCCESS" },
+      });
+      await prisma.notification.create({
+        data: {
+          userId: txn.userId,
+          title: "Rút tiền thành công",
+          message: `Yêu cầu rút tiền ${Math.abs(txn.amount).toLocaleString("vi-VN")}đ của bạn đã được Admin chuyển khoản thành công.`,
+          type: "WALLET",
+          link: "/wallet",
+        },
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "reject_withdrawal") {
+      const txn = await prisma.transaction.findUnique({ where: { id } });
+      if (!txn || txn.type !== "WITHDRAW") {
+        return NextResponse.json({ error: "Không tìm thấy yêu cầu rút tiền" }, { status: 404 });
+      }
+      // Refund balance to user
+      const refundAmt = Math.abs(txn.amount);
+      await prisma.$transaction(async (tx) => {
+        await tx.transaction.update({
+          where: { id },
+          data: { status: "FAILED", description: `${txn.description} (Từ chối: ${data?.reason || "Thông tin không hợp lệ"})` },
+        });
+        const updatedUser = await tx.user.update({
+          where: { id: txn.userId },
+          data: { walletBalance: { increment: refundAmt } },
+        });
+        await tx.transaction.create({
+          data: {
+            userId: txn.userId,
+            type: "REFUND",
+            amount: refundAmt,
+            balanceAfter: updatedUser.walletBalance,
+            description: `Hoàn tiền yêu cầu rút tiền bị từ chối (${data?.reason || "Sai thông tin"})`,
+          },
+        });
+      });
+      await prisma.notification.create({
+        data: {
+          userId: txn.userId,
+          title: "Yêu cầu rút tiền bị từ chối",
+          message: `Yêu cầu rút ${refundAmt.toLocaleString("vi-VN")}đ của bạn bị từ chối. Lý do: ${data?.reason || "Sai thông tin STK"}. Tiền đã được hoàn lại về ví.`,
+          type: "WALLET",
+          link: "/wallet",
+        },
+      });
+      return NextResponse.json({ success: true });
+    }
+
     if (action === "update_user_role") {
       await prisma.user.update({ where: { id }, data: { role: data.role } });
       return NextResponse.json({ success: true });
@@ -188,6 +337,8 @@ export async function PATCH(req: Request) {
         create: { bankCode, apiBaseUrl, apiToken, accountNumber: accountNumber || "", accountName: accountName || "", isActive: isActive ?? true },
       });
       return NextResponse.json({ success: true });
+    }
+
     if (action === "resolve_report") {
       await prisma.report.update({
         where: { id },
@@ -216,8 +367,6 @@ export async function PATCH(req: Request) {
       if (!id) return NextResponse.json({ error: "Thiếu ID" }, { status: 400 });
       await prisma.category.delete({ where: { id } });
       return NextResponse.json({ success: true });
-    }
-
     }
 
     if (action === "delete_autobank") {
