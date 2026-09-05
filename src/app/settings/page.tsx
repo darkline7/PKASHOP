@@ -10,13 +10,37 @@ import { useAuthStore } from "@/stores";
 export default function SettingsPage() {
   const router = useRouter();
   const { user, fetchUser } = useAuthStore();
-  const [form, setForm] = useState({ name: "", phone: "", bio: "", avatar: "", university: "", faculty: "", city: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    bio: "",
+    avatar: "",
+    university: "",
+    faculty: "",
+    city: "",
+    studentId: "",
+    className: "",
+    major: "",
+    telegram: "",
+  });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
-    setForm({ name: user.name || "", phone: user.phone || "", bio: user.bio || "", avatar: user.avatar || "", university: user.university || "", faculty: user.faculty || "", city: user.city || "" });
+    setForm({
+      name: user.name || "",
+      phone: user.phone || "",
+      bio: user.bio || "",
+      avatar: user.avatar || "",
+      university: user.university || "",
+      faculty: user.faculty || "",
+      city: user.city || "",
+      studentId: (user as any).studentId || "",
+      className: (user as any).className || "",
+      major: (user as any).major || "",
+      telegram: (user as any).telegram || "",
+    });
   }, [user, router]);
 
   const set = (k: string) => (e: any) => setForm({ ...form, [k]: e.target.value });
@@ -44,6 +68,28 @@ export default function SettingsPage() {
             <Input label="Khoa" value={form.faculty} onChange={set("faculty")} />
           </div>
           <Input label="Thành phố" value={form.city} onChange={set("city")} />
+          <div className="pt-2 border-t border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-sm">🎓 Xác minh danh tính sinh viên Phenikaa</h3>
+              {user?.isVerified ? (
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  ✓ Đã xác minh
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                  Chưa xác minh
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Mã sinh viên (MSV)" value={form.studentId} onChange={set("studentId")} placeholder="VD: 21010001" />
+              <Input label="Lớp sinh hoạt" value={form.className} onChange={set("className")} placeholder="VD: K15-CNTT1" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Input label="Chuyên ngành" value={form.major} onChange={set("major")} placeholder="VD: Kỹ thuật phần mềm" />
+              <Input label="Telegram Username (để liên hệ)" value={form.telegram} onChange={set("telegram")} placeholder="VD: @phenikaa_user" />
+            </div>
+          </div>
           <Button variant="gradient" size="lg" className="w-full" onClick={handleSave} isLoading={loading}>Lưu thay đổi</Button>
         </Card>
       </main><Footer />

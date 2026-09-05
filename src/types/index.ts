@@ -12,6 +12,10 @@ export interface User {
   university?: string | null;
   faculty?: string | null;
   city?: string | null;
+  studentId?: string | null;
+  className?: string | null;
+  major?: string | null;
+  telegram?: string | null;
   isVerified: boolean;
   rating: number;
   totalSales: number;
@@ -42,7 +46,7 @@ export interface Product {
   description: string;
   price: number;
   originalPrice?: number | null;
-  type: 'DOCUMENT' | 'PHYSICAL';
+  type: 'DOCUMENT' | 'PHYSICAL' | 'QUIZ';
   condition: 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR' | 'BROKEN';
   status: 'DRAFT' | 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SOLD' | 'HIDDEN';
   views: number;
@@ -56,6 +60,8 @@ export interface Product {
   semester?: string | null;
   city?: string | null;
   address?: string | null;
+  proofImages?: string;
+  expiresAt?: string | null;
   thumbnail: string;
   images: string;
   documentUrl?: string | null;
@@ -206,6 +212,27 @@ export interface Report {
   description: string;
   status: 'PENDING' | 'RESOLVED' | 'REJECTED';
   resolution?: string | null;
+  createdAt: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  productId: string;
+  question: string;
+  option1: string;
+  option2: string;
+  option3: string;
+  option4: string;
+  correctAnswer: number;
+  explanation?: string | null;
+  order: number;
+}
+
+export interface QuizAccess {
+  id: string;
+  userId: string;
+  productId: string;
+  expiresAt: string;
   createdAt: string;
 }
 

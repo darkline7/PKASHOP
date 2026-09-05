@@ -10,6 +10,7 @@ import { Badge, Avatar, StarRating, Card } from "@/components/ui/Components";
 import { formatVND, formatRelativeTime, formatFileSize } from "@/lib/utils";
 import type { Product, Review } from "@/types";
 import AddToCartButton from "./AddToCartButton";
+import ReportModal from "./ReportModal";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,22 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
           <GallerySection imgs={imgs} title={product.title} />
           <InfoSection product={product} cond={cond} />
         </div>
+        
+      {product.proofImages && JSON.parse(product.proofImages || "[]").length > 0 && (
+        <Card className="p-4 space-y-2 border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10">
+          <h3 className="font-bold text-sm text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+            🛡️ Minh chứng tài liệu thật từ sinh viên Phenikaa
+          </h3>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {JSON.parse(product.proofImages || "[]").map((imgUrl: string, idx: number) => (
+              <a key={idx} href={imgUrl} target="_blank" rel="noreferrer" className="relative aspect-video rounded-lg overflow-hidden border bg-muted block hover:opacity-90 transition-opacity">
+                <Image src={imgUrl} alt="Minh chứng" fill className="object-cover" sizes="200px" />
+              </a>
+            ))}
+          </div>
+        </Card>
+      )}
+
         {reviews.length > 0 && <ReviewsSection reviews={reviews} />}
         {related.length > 0 && <div className="mt-12"><h2 className="text-xl font-bold mb-4">Sản phẩm liên quan</h2><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{related.map(p => <ProductCard key={p.id} product={p} />)}</div></div>}
       </main><Footer />
@@ -87,7 +104,32 @@ function InfoSection({ product, cond }: { product: Product & { reviews: Review[]
         {product.pageCount && <div><span className="text-muted-foreground">Số trang:</span> <strong>{product.pageCount}</strong></div>}
         {product.courseCode && <div><span className="text-muted-foreground">Mã môn:</span> <strong>{product.courseCode}</strong></div>}
       </div></Card>}
-      <AddToCartButton productId={product.id} />
+      <div className="space-y-2">
+        {product.type === "QUIZ" ? (
+          <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide">🧠 Trắc nghiệm trực tuyến</span>
+              <span className="text-xs text-muted-foreground">Hạn sử dụng 7 ngày</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Làm trực tiếp trên web với hệ thống chấm điểm tự động và lời giải thích.</p>
+            <div className="flex gap-2">
+              <Link href={`/quiz/${product.id}`} className="flex-1">
+                <button className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold text-sm shadow-md transition-all">
+                  Làm Quiz ngay ({formatVND(product.price)})
+                </button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <AddToCartButton productId={product.id} />
+        )}
+        <div className="flex items-center justify-between px-1 pt-1">
+          <ReportModal productId={product.id} />
+          {product.proofImages && JSON.parse(product.proofImages || "[]").length > 0 && (
+            <span className="text-xs font-semibold text-emerald-600">✓ Minh chứng uy tín</span>
+          )}
+        </div>
+      </div>
       <Card className="p-4"><div className="flex items-center gap-3">
         <Avatar src={product.seller?.avatar} name={product.seller?.name || ""} size="lg" />
         <div className="flex-1"><Link href={`/profile/${product.seller?.username}`} className="font-semibold hover:text-primary-600">{product.seller?.name}</Link>

@@ -169,7 +169,7 @@ function ProductRows({ loading, products, actionLoading, handleApprove, handleRe
       </td>
       <td className="px-4 py-3 text-xs">
         <span className="px-2 py-0.5 rounded bg-muted font-medium">
-          {p.type === "DOCUMENT" ? "📄 Tài liệu" : "📦 Vật phẩm"}
+          {p.type === "QUIZ" ? "🧠 Quiz" : p.type === "DOCUMENT" ? "📄 Tài liệu" : "🎁 Đồ SV"}
         </span>
       </td>
       <td className="px-4 py-3 font-semibold text-foreground text-xs sm:text-sm">{formatVND(p.price)}</td>

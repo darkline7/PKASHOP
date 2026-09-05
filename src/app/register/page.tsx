@@ -12,7 +12,18 @@ declare global {
 export default function RegisterPage() {
   const router = useRouter();
   const { setUser } = useAuthStore();
-  const [form, setForm] = useState({ name: "", username: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    studentId: "",
+    className: "",
+    major: "",
+    telegram: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [recaptchaSiteKey, setRecaptchaSiteKey] = useState("");
@@ -42,7 +53,18 @@ export default function RegisterPage() {
       }
       const res = await fetch("/api/auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, username: form.username, email: form.email, password: form.password, recaptchaToken }),
+        body: JSON.stringify({
+          name: form.name,
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          phone: form.phone,
+          studentId: form.studentId,
+          className: form.className,
+          major: form.major,
+          telegram: form.telegram,
+          recaptchaToken,
+        }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Đăng ký thất bại"); setLoading(false); return; }
@@ -72,6 +94,22 @@ export default function RegisterPage() {
             <Input label="Email" type="email" placeholder="your@email.com" value={form.email} onChange={set("email")} required />
             <Input label="Mật khẩu" type="password" placeholder="Tối thiểu 6 ký tự" value={form.password} onChange={set("password")} required />
             <Input label="Xác nhận mật khẩu" type="password" placeholder="Nhập lại mật khẩu" value={form.confirmPassword} onChange={set("confirmPassword")} required />
+            
+            <div className="pt-2 border-t border-border space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                🎓 Xác minh sinh viên Phenikaa (Tùy chọn bổ sung ngay hoặc sau)
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Số điện thoại" placeholder="0987654321" value={form.phone} onChange={set("phone")} />
+                <Input label="Telegram (@username)" placeholder="@user_tele" value={form.telegram} onChange={set("telegram")} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Mã sinh viên" placeholder="VD: 21010001" value={form.studentId} onChange={set("studentId")} />
+                <Input label="Lớp sinh hoạt" placeholder="VD: K15-CNTT1" value={form.className} onChange={set("className")} />
+              </div>
+              <Input label="Ngành học" placeholder="VD: Công nghệ thông tin" value={form.major} onChange={set("major")} />
+            </div>
+
             <Button type="submit" variant="gradient" className="w-full" size="lg" isLoading={loading}>Đăng ký</Button>
           </form>
           <div className="mt-4 text-center text-sm text-muted-foreground">

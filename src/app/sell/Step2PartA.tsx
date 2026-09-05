@@ -1,0 +1,115 @@
+"use client";
+import React, { useState, useRef } from "react";
+import { Button, Input, Textarea } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Components";
+import ImageUpload from "@/components/ui/ImageUpload";
+import { MapPin, ArrowLeft, ArrowRight, UploadCloud, FileText, HelpCircle, ShieldCheck } from "lucide-react";
+
+export function Step2PartA({ form, set, cats, setForm }: any) {
+  return (
+    <>
+      <div>
+        <h2 className="text-base font-bold text-foreground mb-1">Thông tin chi tiết</h2>
+        <p className="text-xs text-muted-foreground">
+          {form.type === "QUIZ"
+            ? "Cung cấp câu hỏi trắc nghiệm và mức giá (15.000đ hoặc 20.000đ)"
+            : form.type === "DOCUMENT"
+            ? "Tải lên file tài liệu trực tiếp & ảnh minh chứng uy tín"
+            : "Thông tin đồ pass sinh viên (hiển thị trong 7 ngày, sau đó tự ẩn)"}
+        </p>
+      </div>
+
+      <Input
+        label="Tiêu đề bài đăng *"
+        placeholder={
+          form.type === "QUIZ"
+            ? "VD: Bộ 50 câu trắc nghiệm Triết học Mác - Lênin có đáp án"
+            : form.type === "DOCUMENT"
+            ? "VD: Slide + Đề thi Giải tích 1 Phenikaa full kì gần nhất"
+            : "VD: Máy tính Casio fx 580 VNX còn mới nguyên tem"
+        }
+        value={form.title}
+        onChange={set("title")}
+        required
+      />
+
+      <Textarea
+        label="Mô tả chi tiết *"
+        placeholder="Mô tả cụ thể về kiến thức, tình trạng, độ chuẩn xác..."
+        rows={3}
+        value={form.description}
+        onChange={set("description")}
+        required
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium block mb-1.5 text-foreground">Danh mục môn / ngành *</label>
+          <select
+            value={form.categoryId}
+            onChange={set("categoryId")}
+            className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">-- Chọn danh mục --</option>
+            {cats.map((c: any) => (
+              <option key={c.id} value={c.id}>
+                {c.icon || "📁"} {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {form.type === "QUIZ" ? (
+          <div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">
+              Giá làm Quiz (Cố định 2 mức giá) *
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[15000, 20000].map((pr) => (
+                <button
+                  key={pr}
+                  type="button"
+                  onClick={() => setForm({ ...form, price: String(pr) })}
+                  className={`h-10 rounded-lg font-bold text-sm border-2 transition-all ${
+                    Number(form.price) === pr
+                      ? "border-primary-600 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300"
+                      : "border-border hover:border-primary-300"
+                  }`}
+                >
+                  {pr.toLocaleString("vi-VN")}đ
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Hạn làm bài 7 ngày kể từ lúc mua. Hoa hồng hệ thống: 30%.
+            </p>
+          </div>
+        ) : form.type === "DOCUMENT" ? (
+          <div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">Giá bán tài liệu (VNĐ) *</label>
+            <Input
+              type="number"
+              placeholder="VD: 30000"
+              value={form.price}
+              onChange={set("price")}
+              required
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Thanh toán qua số dư ví web. Hoa hồng hệ thống: 30%.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">Giá pass đồ</label>
+            <div className="h-10 rounded-lg border border-border bg-muted/40 px-3 flex items-center text-sm font-semibold text-emerald-600">
+              0đ (Miễn phí hỗ trợ sinh viên)
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Tin đăng sẽ tự động hết hạn sau 7 ngày.
+            </p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

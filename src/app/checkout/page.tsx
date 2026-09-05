@@ -76,9 +76,19 @@ export default function CheckoutPage() {
         {step === 2 && (
           <div className="space-y-4">
             <Card className="p-4"><h2 className="font-semibold mb-3">Phương thức thanh toán</h2>
-              {[{ v: "WALLET", l: `💰 Ví PKASHOP (${formatVND(user.walletBalance)})` }, { v: "BANK_TRANSFER", l: "🏦 Chuyển khoản" }, { v: "COD", l: "📦 COD (chỉ vật phẩm)" }].map(m => (
-                <button key={m.v} onClick={() => setMethod(m.v)} className={`w-full text-left px-4 py-3 rounded-xl mb-2 border-2 transition-all ${method === m.v ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20" : "border-border hover:border-primary-300"}`}>{m.l}</button>
-              ))}
+              {(() => {
+                const hasDigital = items.some(i => i.product.type === "DOCUMENT" || i.product.type === "QUIZ");
+                const methods = hasDigital
+                  ? [{ v: "WALLET", l: `💰 Ví PKASHOP trên web (${formatVND(user.walletBalance)}) - Bắt buộc cho Quiz & Tài liệu` }]
+                  : [
+                      { v: "WALLET", l: `💰 Ví PKASHOP (${formatVND(user.walletBalance)})` },
+                      { v: "BANK_TRANSFER", l: "🏦 Chuyển khoản" },
+                      { v: "COD", l: "📦 COD (Nhận hàng trả tiền)" },
+                    ];
+                return methods.map(m => (
+                  <button key={m.v} onClick={() => setMethod(m.v)} className={`w-full text-left px-4 py-3 rounded-xl mb-2 border-2 transition-all ${method === m.v ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20" : "border-border hover:border-primary-300"}`}>{m.l}</button>
+                ));
+              })()}
             </Card>
             <div className="flex gap-3">
               <Button variant="outline" size="lg" onClick={() => setStep(1)}>Quay lại</Button>

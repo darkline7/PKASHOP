@@ -26,9 +26,10 @@ function ProductCardComponent({ product }: { product: Product }) {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
-          <div className="absolute top-2 left-2 flex gap-1.5">
+          <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
+            {product.type === "QUIZ" && <Badge variant="warning">🧠 Quiz 7 ngày</Badge>}
             {product.type === "DOCUMENT" && <Badge variant="info">📄 Tài liệu</Badge>}
-            {product.type === "PHYSICAL" && <Badge variant="success">📦 Vật phẩm</Badge>}
+            {product.type === "PHYSICAL" && <Badge variant="success">🎁 Đồ SV (0đ)</Badge>}
             {product.isFeatured && <Badge variant="warning">⭐ Nổi bật</Badge>}
           </div>
           {product.originalPrice && product.originalPrice > product.price && (

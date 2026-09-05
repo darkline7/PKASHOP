@@ -17,6 +17,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   "application/zip",
   "application/x-zip-compressed",
+  "text/plain",
 ]);
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB

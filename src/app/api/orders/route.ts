@@ -59,6 +59,12 @@ export async function POST(req: Request) {
       sellerGroups[sid].push(item);
     }
 
+    // Pre-validate: Documents & Quizzes must be paid with WALLET
+    const hasDigital = cartItems.some(i => i.product.type === "DOCUMENT" || i.product.type === "QUIZ");
+    if (hasDigital && paymentMethod !== "WALLET") {
+      return NextResponse.json({ error: "Tài liệu và Quiz chỉ được thanh toán bằng số dư Ví PKASHOP trên web." }, { status: 400 });
+    }
+
     // Pre-validate wallet balance
     if (paymentMethod === "WALLET") {
       const totalAll = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
@@ -99,11 +105,37 @@ export async function POST(req: Request) {
           if (freshBuyer.walletBalance < totalAmount) throw new Error("INSUFFICIENT_BALANCE");
           await tx.user.update({ where: { id: user.id }, data: { walletBalance: { decrement: totalAmount } } });
           await tx.transaction.create({ data: { userId: user.id, type: "PAYMENT", amount: -totalAmount, balanceAfter: freshBuyer.walletBalance - totalAmount, description: `Thanh toán đơn #${orderNumber}`, referenceId: order.id } });
-          const sellerCut = totalAmount * 0.9;
-          const platformFee = totalAmount * 0.1;
+          // Calculate cuts: for QUIZ and DOCUMENT, platform fee is 30% (seller gets 70%)
+          let sellerCut = 0;
+          let platformFee = 0;
+          for (const item of items) {
+            const itemTotal = item.product.price * item.quantity;
+            if (item.product.type === "DOCUMENT" || item.product.type === "QUIZ") {
+              // 30% commission
+              const fee = itemTotal * 0.3;
+              platformFee += fee;
+              sellerCut += (itemTotal - fee);
+            } else {
+              // Physical items: 10% or free
+              const fee = itemTotal * 0.1;
+              platformFee += fee;
+              sellerCut += (itemTotal - fee);
+            }
+          }
+
           await tx.user.update({ where: { id: sellerId }, data: { walletBalance: { increment: sellerCut }, frozenBalance: { increment: platformFee } } });
           for (const item of items) {
             await tx.product.update({ where: { id: item.product.id }, data: { soldCount: { increment: item.quantity } } });
+
+            // If product is QUIZ, create or extend QuizAccess for 7 days
+            if (item.product.type === "QUIZ") {
+              const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+              await tx.quizAccess.upsert({
+                where: { userId_productId: { userId: user.id, productId: item.product.id } },
+                create: { userId: user.id, productId: item.product.id, orderId: order.id, expiresAt },
+                update: { expiresAt, orderId: order.id },
+              });
+            }
           }
           await tx.notification.create({ data: { userId: sellerId, title: "Đơn hàng mới", message: `Bạn có đơn hàng mới #${orderNumber}`, type: "ORDER", link: `/seller/orders` } });
         }

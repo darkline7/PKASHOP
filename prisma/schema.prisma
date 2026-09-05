@@ -20,6 +20,10 @@ model User {
   university      String?
   faculty         String?
   city            String?
+  studentId       String?
+  className       String?
+  major           String?
+  telegram        String?
   isVerified      Boolean        @default(false)
   rating          Float          @default(5.0)
   totalSales      Int            @default(0)
@@ -46,6 +50,8 @@ model User {
   notifications   Notification[]
   reports         Report[]       @relation("UserReports")
   auditLogs       AuditLog[]     @relation("AuditLogs")
+  quizAccesses    QuizAccess[]
+  quizAttempts    QuizAttempt[]
 
   @@index([role])
   @@index([createdAt])
@@ -87,6 +93,8 @@ model Product {
   semester      String?
   city          String?
   address       String?
+  proofImages   String?           @default("[]")
+  expiresAt     DateTime?
   
   thumbnail     String
   images        String            @default("[]") // JSON string of urls
@@ -119,6 +127,9 @@ model Product {
   cartItems     CartItem[]
   conversations Conversation[]
   reports       Report[]
+  quizQuestions QuizQuestion[]
+  quizAccesses  QuizAccess[]
+  quizAttempts  QuizAttempt[]
 
   @@index([sellerId])
   @@index([categoryId])
@@ -368,4 +379,57 @@ model AuditLog {
   @@index([adminId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+model QuizQuestion {
+  id            String       @id @default(cuid())
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  question      String
+  option1       String
+  option2       String
+  option3       String
+  option4       String
+  correctAnswer Int
+  explanation   String?
+  order         Int          @default(0)
+  createdAt     DateTime     @default(now())
+
+  @@index([productId])
+}
+
+model QuizAccess {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   String?
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+
+  attempts  QuizAttempt[]
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@index([expiresAt])
+}
+
+model QuizAttempt {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quizAccessId String?
+  quizAccess   QuizAccess? @relation(fields: [quizAccessId], references: [id], onDelete: Cascade)
+  score        Int         @default(0)
+  totalScore   Int         @default(0)
+  answers      String      @default("{}")
+  completedAt  DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@index([userId])
+  @@index([productId])
 }
