@@ -8,7 +8,7 @@ echo             PKASHOP - 1-CLICK LAUNCHER
 echo ===================================================
 echo.
 
-:: 1. Check Node.js
+:: 1. Kiem tra Node.js & Git
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     color 0C
@@ -18,55 +18,56 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: 2. Check .env file
-if not exist ".env" (
-    echo [1/4] Tao file cau hinh .env...
-    copy .env.example .env >nul
+:: 2. Tu dong pull code moi nhat tu Git ve (neu co git)
+where git >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [1/5] Dang kiem tra va cap nhat code moi nhat tu Git...
+    git pull origin main
 ) else (
-    echo [1/4] File .env da san sang.
+    echo [1/5] Bo qua git pull (chua cai Git).
 )
 
-:: 3. Check node_modules
+:: 3. Check .env file
+if not exist ".env" (
+    echo [2/5] Tao file cau hinh .env tu .env.example...
+    copy .env.example .env >nul
+) else (
+    echo [2/5] File .env da san sang.
+)
+
+:: 4. Check dependencies (npm install)
 if not exist "node_modules" (
-    echo [2/4] Dang cai dat thu vien npm install...
+    echo [3/5] Dang cai dat thu vien npm install...
     call npm install
     if %errorlevel% neq 0 (
         color 0C
-        echo [ERROR] npm install failed!
+        echo [ERROR] npm install that bai!
         pause
         exit /b 1
     )
 ) else (
-    echo [2/4] Thu vien node_modules da san sang.
+    echo [3/5] Thu vien node_modules da san sang.
 )
 
-:: 4. Prisma Setup
-echo [3/4] Dong bo database Prisma...
+:: 5. Dong bo Prisma Database
+echo [4/5] Dong bo schema database Prisma...
 call npx prisma generate
-if not exist "prisma\dev.db" (
-    echo [3/4] Khoi tao database dev.db...
-    call npx prisma db push --accept-data-loss
-    call node prisma/seed.js
+call npx prisma db push --accept-data-loss
+
+:: 6. Build lai ban production moi nhat
+echo [5/5] Dang dong goi ban build moi nhat (npm run build)...
+call npm run build
+if %errorlevel% neq 0 (
+    color 0C
+    echo [ERROR] npm run build that bai!
+    pause
+    exit /b 1
 )
 
-:: 5. Production build check
-if not exist ".next" (
-    echo [4/4] Dang bien dich production build...
-    call npm run build
-    if %errorlevel% neq 0 (
-        color 0C
-        echo [ERROR] npm run build failed!
-        pause
-        exit /b 1
-    )
-) else (
-    echo [4/4] Ban build .next da san sang.
-)
-
-:: 6. Launch Server
+:: 7. Launch Server
 echo.
 echo ===================================================
-echo   PKASHOP DANG CHAY THANH CONG!
+echo   PKASHOP DA SAN SANG VA DANG CHAY CODE MOI NHAT!
 echo   Website:      http://localhost:3000
 echo   Admin Panel:  http://localhost:3000/admin
 echo ===================================================
