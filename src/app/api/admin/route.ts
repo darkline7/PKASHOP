@@ -71,6 +71,47 @@ export async function GET(req: Request) {
       return NextResponse.json({ products, total });
     }
 
+    if (action === "orders") {
+      const page = Number(url.searchParams.get("page")) || 1;
+      const status = url.searchParams.get("status") || "";
+      const where: any = {};
+      if (status) where.status = status;
+      const [orders, total] = await Promise.all([
+        prisma.order.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip: (page - 1) * 20,
+          take: 20,
+          include: {
+            buyer: { select: { id: true, name: true, email: true, avatar: true } },
+            seller: { select: { id: true, name: true, email: true } },
+            items: true,
+          },
+        }),
+        prisma.order.count({ where }),
+      ]);
+      return NextResponse.json({ orders, total });
+    }
+
+    if (action === "categories") {
+      const categories = await prisma.category.findMany({
+        orderBy: { order: "asc" },
+        include: { _count: { select: { products: true } } },
+      });
+      return NextResponse.json({ categories });
+    }
+
+    if (action === "reports") {
+      const reports = await prisma.report.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          reporter: { select: { id: true, name: true, email: true } },
+          product: { select: { id: true, title: true, slug: true } },
+        },
+      });
+      return NextResponse.json({ reports });
+    }
+
     if (action === "autobank") {
       const configs = await prisma.autoBankConfig.findMany({ orderBy: { bankCode: "asc" } });
       return NextResponse.json({ configs });
@@ -121,6 +162,36 @@ export async function PATCH(req: Request) {
         create: { bankCode, apiBaseUrl, apiToken, accountNumber: accountNumber || "", accountName: accountName || "", isActive: isActive ?? true },
       });
       return NextResponse.json({ success: true });
+    if (action === "resolve_report") {
+      await prisma.report.update({
+        where: { id },
+        data: { status: data.status || "RESOLVED", resolution: data.resolution || "" },
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "save_category") {
+      const { name, slug, description, icon, type, order } = data;
+      if (!name || !slug) return NextResponse.json({ error: "Thiếu tên hoặc slug" }, { status: 400 });
+      if (id) {
+        await prisma.category.update({
+          where: { id },
+          data: { name, slug, description, icon, type: type || "ALL", order: Number(order) || 0 },
+        });
+      } else {
+        await prisma.category.create({
+          data: { name, slug, description, icon, type: type || "ALL", order: Number(order) || 0 },
+        });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "delete_category") {
+      if (!id) return NextResponse.json({ error: "Thiếu ID" }, { status: 400 });
+      await prisma.category.delete({ where: { id } });
+      return NextResponse.json({ success: true });
+    }
+
     }
 
     if (action === "delete_autobank") {

@@ -95,7 +95,8 @@ function InfoSection({ product, cond }: { product: Product & { reviews: Review[]
         </div><Link href={`/messages?to=${product.seller?.id}`}><button className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">💬 Chat</button></Link>
       </div></Card>
       <Card className="p-4"><h3 className="font-semibold mb-2">Mô tả</h3><p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p></Card>
-      {(product.university || product.city) && <Card className="p-4 text-sm space-y-1">
+      {(product.address || product.university || product.city) && <Card className="p-4 text-sm space-y-1">
+        {product.address && <p>📍 Địa chỉ nhận / giao dịch: {product.address}</p>}
         {product.university && <p>�� {product.university}{(product as any).faculty ? ` - ${(product as any).faculty}` : ""}</p>}
         {product.city && <p>📍 {product.city}</p>}
         {(product as any).semester && <p>📅 {(product as any).semester}</p>}

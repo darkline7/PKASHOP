@@ -117,7 +117,7 @@ export default function HomePage({ initialFeatured, initialLatest, initialCatego
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-600 dark:text-primary-400 text-xs font-semibold mb-6 shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-primary-500" />
-              <span>Cộng đồng học tập & Marketplace sinh viên số 1 Bách Khoa</span>
+              <span>Cộng đồng học tập & Marketplace sinh viên số 1 Phenikaa</span>
               <span className="hidden sm:inline-block text-muted-foreground">•</span>
               <span className="hidden sm:inline-block text-xs font-bold text-amber-500">2026 Edition</span>
             </div>
@@ -392,7 +392,7 @@ export default function HomePage({ initialFeatured, initialLatest, initialCatego
                 </div>
                 <h3 className="font-bold text-sm sm:text-base text-foreground mb-1">Cộng đồng sinh viên thật</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Hàng ngàn sinh viên từ ĐH Bách Khoa, Quốc Gia, Ngoại Thương, Kinh Tế... cùng trao đổi và pass đồ tin cậy.
+                  Hàng ngàn sinh viên Phenikaa và các trường Đại học cùng trao đổi tài liệu và pass đồ dùng tin cậy.
                 </p>
               </div>
             </div>

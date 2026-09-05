@@ -84,7 +84,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
-              Nền tảng chia sẻ tài liệu học tập, giáo trình, đề thi và pass đồ dùng học tập số 1 dành cho sinh viên Bách Khoa và các trường Đại học tại Việt Nam.
+              Nền tảng chia sẻ tài liệu học tập, giáo trình, đề thi và pass đồ dùng học tập số 1 dành cho sinh viên Phenikaa và các trường Đại học tại Việt Nam.
             </p>
 
             <div className="space-y-1.5 sm:space-y-2 pt-1 text-xs text-muted-foreground">

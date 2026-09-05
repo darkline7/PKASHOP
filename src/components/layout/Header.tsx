@@ -178,7 +178,7 @@ export default function Header() {
               Mới 2026
             </span>
             <span className="text-slate-300">
-              Nền tảng chia sẻ tài liệu & pass đồ số 1 sinh viên Bách Khoa và các trường Đại học
+              Nền tảng chia sẻ tài liệu & pass đồ số 1 sinh viên Phenikaa và các trường Đại học
             </span>
           </div>
           <div className="flex items-center gap-4 text-slate-400">

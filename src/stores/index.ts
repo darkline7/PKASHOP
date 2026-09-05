@@ -1,46 +1,68 @@
 "use client";
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { User, CartItem, Notification } from "@/types";
 
 // ============ Auth Store ============
 interface AuthState {
   user: User | null;
   isLoading: boolean;
+  isInitialized: boolean;
   _lastFetched: number;
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   fetchUser: (force?: boolean) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  isLoading: true,
-  _lastFetched: 0,
-  setUser: (user) => set({ user, isLoading: false, _lastFetched: Date.now() }),
-  setLoading: (isLoading) => set({ isLoading }),
-  logout: async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    set({ user: null, isLoading: false, _lastFetched: 0 });
-  },
-  fetchUser: async (force = false) => {
-    // Skip if already fetched within 30 seconds
-    if (!force && get()._lastFetched && Date.now() - get()._lastFetched < 30000) return;
-    try {
-      set({ isLoading: true });
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        const data = await res.json();
-        set({ user: data.user, isLoading: false, _lastFetched: Date.now() });
-      } else {
-        set({ user: null, isLoading: false, _lastFetched: Date.now() });
-      }
-    } catch {
-      set({ user: null, isLoading: false, _lastFetched: Date.now() });
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      isLoading: true,
+      isInitialized: false,
+      _lastFetched: 0,
+      setUser: (user) => set({ user, isLoading: false, isInitialized: true, _lastFetched: Date.now() }),
+      setLoading: (isLoading) => set({ isLoading }),
+      logout: async () => {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch { /* ignore */ }
+        set({ user: null, isLoading: false, isInitialized: true, _lastFetched: 0 });
+      },
+      fetchUser: async (force = false) => {
+        // Skip if already fetched within 30 seconds
+        if (!force && get()._lastFetched && Date.now() - get()._lastFetched < 30000) {
+          set({ isLoading: false, isInitialized: true });
+          return;
+        }
+        try {
+          set({ isLoading: true });
+          const res = await fetch("/api/auth/me");
+          if (res.ok) {
+            const data = await res.json();
+            set({ user: data.user, isLoading: false, isInitialized: true, _lastFetched: Date.now() });
+          } else {
+            set({ user: null, isLoading: false, isInitialized: true, _lastFetched: Date.now() });
+          }
+        } catch {
+          set({ user: null, isLoading: false, isInitialized: true, _lastFetched: Date.now() });
+        }
+      },
+    }),
+    {
+      name: "pkashop-auth",
+      partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isInitialized = true;
+          state.isLoading = false;
+        }
+      },
     }
-  },
-}));
+  )
+);
 
 // ============ Cart Store ============
 interface CartState {
