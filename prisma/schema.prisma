@@ -1,0 +1,371 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  username        String         @unique
+  password        String
+  name            String
+  avatar          String?
+  role            String         @default("USER") // USER, SELLER, ADMIN
+  bio             String?
+  phone           String?
+  university      String?
+  faculty         String?
+  city            String?
+  isVerified      Boolean        @default(false)
+  rating          Float          @default(5.0)
+  totalSales      Int            @default(0)
+  totalReviews    Int            @default(0)
+  walletBalance   Float          @default(0)
+  frozenBalance   Float          @default(0)
+  bankName        String?
+  bankAccount     String?
+  bankAccountName String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  blocked         Boolean        @default(false)
+
+  products        Product[]      @relation("UserProducts")
+  orders          Order[]        @relation("BuyerOrders")
+  sellerOrders    Order[]        @relation("SellerOrders")
+  reviews         Review[]       @relation("UserReviews")
+  wishlist        Wishlist[]
+  cartItems       CartItem[]
+  transactions    Transaction[]
+  sentMessages    Message[]      @relation("SentMessages")
+  conversations1  Conversation[] @relation("Participant1")
+  conversations2  Conversation[] @relation("Participant2")
+  notifications   Notification[]
+  reports         Report[]       @relation("UserReports")
+  auditLogs       AuditLog[]     @relation("AuditLogs")
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  icon        String?
+  type        String      @default("ALL") // DOCUMENT, PHYSICAL, ALL
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  products    Product[]
+}
+
+model Product {
+  id            String            @id @default(cuid())
+  title         String
+  slug          String            @unique
+  description   String
+  price         Float
+  originalPrice Float?
+  type          String            @default("DOCUMENT") // DOCUMENT, PHYSICAL
+  condition     String            @default("GOOD") // NEW, LIKE_NEW, GOOD, FAIR
+  status        String            @default("ACTIVE") // DRAFT, PENDING, ACTIVE, REJECTED, SOLD, HIDDEN
+  views         Int               @default(0)
+  downloads     Int               @default(0)
+  soldCount     Int               @default(0)
+  rating        Float             @default(5.0)
+  totalReviews  Int               @default(0)
+  
+  university    String?
+  faculty       String?
+  courseCode    String?
+  semester      String?
+  city          String?
+  address       String?
+  
+  thumbnail     String
+  images        String            @default("[]") // JSON string of urls
+  
+  documentUrl   String?
+  fileFormat    String?           // PDF, DOCX, PPTX, ZIP, etc.
+  fileSize      Int?              // in bytes
+  pageCount     Int?
+  previewPages  String?           @default("[]")
+  
+  aiSummary     String?
+  aiKeyTakeaways String?
+  knowledgeGraph String?
+  
+  isFeatured    Boolean           @default(false)
+  tags          String            @default("[]")
+
+  sellerId      String
+  seller        User              @relation("UserProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  categoryId    String
+  category      Category          @relation(fields: [categoryId], references: [id])
+  
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlist      Wishlist[]
+  cartItems     CartItem[]
+  conversations Conversation[]
+  reports       Report[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([sellerId, status])
+}
+
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  buyerId         String
+  buyer           User          @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId        String?
+  seller          User?         @relation("SellerOrders", fields: [sellerId], references: [id])
+  
+  totalAmount     Float
+  discountAmount  Float         @default(0)
+  shippingFee     Float         @default(0)
+  finalAmount     Float
+  
+  status          String        @default("PENDING") // PENDING, PAID, PROCESSING, SHIPPING, COMPLETED, CANCELLED, REFUNDED
+  paymentMethod   String        @default("WALLET") // WALLET, VNPAY, MOMO, STRIPE, COD, BANK_TRANSFER
+  paymentStatus   String        @default("UNPAID") // UNPAID, PAID, FAILED, REFUNDED
+  
+  shippingName    String?
+  shippingPhone   String?
+  shippingAddress String?
+  shippingCity    String?
+  trackingCode    String?
+  note            String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items           OrderItem[]
+  reviews         Review[]
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([buyerId, status])
+  @@index([sellerId, status])
+  @@index([paymentStatus])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  title       String
+  price       Float
+  quantity    Int      @default(1)
+  type        String   @default("DOCUMENT")
+  thumbnail   String?
+  documentUrl String?
+  downloadCount Int    @default(0)
+  
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Transaction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type          String   // DEPOSIT, WITHDRAW, PAYMENT, RECEIVE_MONEY, REFUND, AUTOBANK_IN, AUTOBANK_OUT
+  amount        Float
+  fee           Float    @default(0)
+  balanceAfter  Float
+  status        String   @default("SUCCESS") // PENDING, SUCCESS, FAILED, CANCELLED
+  paymentMethod String   @default("WALLET")
+  referenceId   String?
+  description   String
+  
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([referenceId])
+}
+
+model AutoBankConfig {
+  id                String   @id @default(cuid())
+  bankCode          String   @unique // ACB, MBBANK
+  apiBaseUrl        String
+  apiToken          String
+  accountNumber     String
+  accountName       String
+  isActive          Boolean  @default(true)
+  lastSyncAt        DateTime?
+  lastTransactionId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SystemSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+
+  @@index([key])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+  
+  rating    Int      @default(5)
+  comment   String
+  images    String   @default("[]")
+  reply     String?
+  replyAt   DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Conversation {
+  id              String    @id @default(cuid())
+  participant1Id  String
+  participant1    User      @relation("Participant1", fields: [participant1Id], references: [id], onDelete: Cascade)
+  participant2Id  String
+  participant2    User      @relation("Participant2", fields: [participant2Id], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?  @relation(fields: [productId], references: [id])
+  
+  lastMessage     String?
+  lastMessageAt   DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  messages        Message[]
+
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content         String
+  type            String       @default("TEXT") // TEXT, IMAGE, PRODUCT, SYSTEM
+  isRead          Boolean      @default(false)
+  
+  createdAt       DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([conversationId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // ORDER, WALLET, SYSTEM, CHAT, PRODUCT, REVIEW
+  link      String?
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation("UserReports", fields: [reporterId], references: [id])
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  
+  reason      String
+  description String
+  status      String   @default("PENDING") // PENDING, RESOLVED, REJECTED
+  resolution  String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  admin      User?    @relation("AuditLogs", fields: [adminId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   String?
+  newValue   String?
+  reason     String?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

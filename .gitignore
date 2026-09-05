@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Debug/test files
+*.log
+npm-debug.log*
+check_db.js
+test_wal.js
+
+# Zip archives (don't push binaries)
+*.zip
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db-wal
+prisma/dev.db-shm
+
+# Misc
+prompt.md
+sex.zip
