@@ -12,7 +12,7 @@ export function Step2PartA({ form, set, cats, setForm }: any) {
         <h2 className="text-base font-bold text-foreground mb-1">Thông tin chi tiết</h2>
         <p className="text-xs text-muted-foreground">
           {form.type === "QUIZ"
-            ? "Cung cấp câu hỏi trắc nghiệm và mức giá (15.000đ hoặc 20.000đ)"
+            ? "Cung cấp câu hỏi trắc nghiệm và mức giá (Miễn phí 0đ, 15.000đ hoặc 20.000đ)"
             : form.type === "DOCUMENT"
             ? "Tải lên file tài liệu trực tiếp & ảnh minh chứng uy tín"
             : "Thông tin đồ pass sinh viên (hiển thị trong 7 ngày, sau đó tự ẩn)"}
@@ -62,26 +62,26 @@ export function Step2PartA({ form, set, cats, setForm }: any) {
         {form.type === "QUIZ" ? (
           <div>
             <label className="text-sm font-medium block mb-1.5 text-foreground">
-              Giá làm Quiz (Cố định 2 mức giá) *
+              Giá làm Quiz *
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {[15000, 20000].map((pr) => (
+            <div className="grid grid-cols-3 gap-2">
+              {[0, 15000, 20000].map((pr) => (
                 <button
                   key={pr}
                   type="button"
                   onClick={() => setForm({ ...form, price: String(pr) })}
-                  className={`h-10 rounded-lg font-bold text-sm border-2 transition-all ${
+                  className={`h-10 rounded-lg font-bold text-xs sm:text-sm border-2 transition-all ${
                     Number(form.price) === pr
                       ? "border-primary-600 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300"
                       : "border-border hover:border-primary-300"
                   }`}
                 >
-                  {pr.toLocaleString("vi-VN")}đ
+                  {pr === 0 ? "Miễn phí (0đ)" : `${pr.toLocaleString("vi-VN")}đ`}
                 </button>
               ))}
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Hạn làm bài 7 ngày kể từ lúc mua. Hoa hồng hệ thống: 30%.
+              Hạn làm bài 7 ngày kể từ lúc mua. Có thể chọn miễn phí hoặc tính phí.
             </p>
           </div>
         ) : form.type === "DOCUMENT" ? (

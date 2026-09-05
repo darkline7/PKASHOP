@@ -7,7 +7,9 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { formatVND } from "@/lib/utils";
-import { Check, X, RefreshCw, Eye } from "lucide-react";
+import { Check, X, RefreshCw, Eye, Edit2, Trash2, EyeOff } from "lucide-react";
+import { Input, Textarea } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Components";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -72,6 +74,96 @@ export default function AdminProductsPage() {
     }
   };
 
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", price: "", originalPrice: "", description: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const handleToggleHide = async (id: string) => {
+    setActionLoading(id);
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "hide_product", id }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, status: d.status } : p))
+        );
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xoá vĩnh viễn bài đăng này?")) return;
+    setActionLoading(id);
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_product", id }),
+      });
+      if (res.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const openEdit = (p: any) => {
+    setEditingProduct(p);
+    setEditForm({
+      title: p.title,
+      price: String(p.price),
+      originalPrice: p.originalPrice ? String(p.originalPrice) : "",
+      description: p.description || "",
+    });
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch("/api/admin", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_product",
+          id: editingProduct.id,
+          data: {
+            title: editForm.title,
+            price: editForm.price,
+            originalPrice: editForm.originalPrice,
+            description: editForm.description,
+          },
+        }),
+      });
+      if (res.ok) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === editingProduct.id
+              ? {
+                  ...p,
+                  title: editForm.title,
+                  price: Number(editForm.price),
+                  originalPrice: editForm.originalPrice ? Number(editForm.originalPrice) : null,
+                  description: editForm.description,
+                }
+              : p
+          )
+        );
+        setEditingProduct(null);
+      }
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   return (
     <>
       <AdminPageHeader
@@ -125,17 +217,83 @@ export default function AdminProductsPage() {
                   actionLoading={actionLoading}
                   handleApprove={handleApprove}
                   handleReject={handleReject}
+                  handleToggleHide={handleToggleHide}
+                  handleDelete={handleDelete}
+                  openEdit={openEdit}
                 />
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <h3 className="font-bold text-base text-foreground">✏️ Sửa thông tin sản phẩm</h3>
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="p-1 rounded-lg hover:bg-muted text-muted-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <form onSubmit={handleSaveEdit} className="space-y-3.5">
+              <Input
+                label="Tiêu đề sản phẩm *"
+                value={editForm.title}
+                onChange={(e: any) => setEditForm({ ...editForm, title: e.target.value })}
+                required
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="Giá bán (VNĐ) *"
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e: any) => setEditForm({ ...editForm, price: e.target.value })}
+                  required
+                />
+                <Input
+                  label="Giá gốc (VNĐ)"
+                  type="number"
+                  value={editForm.originalPrice}
+                  onChange={(e: any) => setEditForm({ ...editForm, originalPrice: e.target.value })}
+                />
+              </div>
+              <Textarea
+                label="Mô tả chi tiết"
+                rows={4}
+                value={editForm.description}
+                onChange={(e: any) => setEditForm({ ...editForm, description: e.target.value })}
+              />
+              <div className="flex justify-end gap-2 pt-2 border-t border-border/60">
+                <Button type="button" variant="outline" onClick={() => setEditingProduct(null)}>
+                  Hủy
+                </Button>
+                <Button type="submit" variant="gradient" isLoading={savingEdit}>
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </>
   );
 }
 
-function ProductRows({ loading, products, actionLoading, handleApprove, handleReject }: any) {
+function ProductRows({
+  loading,
+  products,
+  actionLoading,
+  handleApprove,
+  handleReject,
+  handleToggleHide,
+  handleDelete,
+  openEdit,
+}: any) {
   if (loading) {
     return (
       <tr>
@@ -169,7 +327,7 @@ function ProductRows({ loading, products, actionLoading, handleApprove, handleRe
       </td>
       <td className="px-4 py-3 text-xs">
         <span className="px-2 py-0.5 rounded bg-muted font-medium">
-          {p.type === "QUIZ" ? "🧠 Quiz" : p.type === "DOCUMENT" ? "📄 Tài liệu" : "🎁 Đồ SV"}
+          {p.type === "QUIZ" ? "🧠 Quiz" : p.type === "DOCUMENT" ? "📄 Tài liệu" : "🎁 Đồ sinh viên"}
         </span>
       </td>
       <td className="px-4 py-3 font-semibold text-foreground text-xs sm:text-sm">{formatVND(p.price)}</td>
@@ -183,9 +341,42 @@ function ProductRows({ loading, products, actionLoading, handleApprove, handleRe
             href={`/product/${p.slug}`}
             target="_blank"
             className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground"
+            title="Xem chi tiết"
           >
             <Eye className="w-4 h-4" />
           </Link>
+
+          <button
+            type="button"
+            onClick={() => openEdit(p)}
+            className="p-1.5 rounded-lg border border-border hover:bg-muted text-primary-600"
+            title="Chỉnh sửa bài đăng"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleToggleHide(p.id)}
+            className={`p-1.5 rounded-lg border border-border hover:bg-muted ${
+              p.status === "HIDDEN" ? "text-emerald-600" : "text-amber-600"
+            }`}
+            title={p.status === "HIDDEN" ? "Hiện lại bài đăng" : "Ẩn bài đăng"}
+            disabled={actionLoading === p.id}
+          >
+            <EyeOff className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleDelete(p.id)}
+            className="p-1.5 rounded-lg border border-border hover:bg-red-50 text-red-600"
+            title="Xóa vĩnh viễn"
+            disabled={actionLoading === p.id}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+
           {p.status === "PENDING" && (
             <>
               <Button
@@ -194,6 +385,7 @@ function ProductRows({ loading, products, actionLoading, handleApprove, handleRe
                 className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                 onClick={() => handleApprove(p.id)}
                 isLoading={actionLoading === p.id}
+                title="Duyệt sản phẩm"
               >
                 <Check className="w-3.5 h-3.5 mr-1" /> Duyệt
               </Button>
@@ -203,6 +395,7 @@ function ProductRows({ loading, products, actionLoading, handleApprove, handleRe
                 className="h-8 px-2.5 border-red-500/50 text-red-600 hover:bg-red-50"
                 onClick={() => handleReject(p.id)}
                 disabled={actionLoading === p.id}
+                title="Từ chối sản phẩm"
               >
                 <X className="w-3.5 h-3.5" />
               </Button>

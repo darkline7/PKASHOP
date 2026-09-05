@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     let expiresAt: Date | null = null;
 
     if (user) {
-      if (user.id === product.sellerId || user.role === "ADMIN") {
+      if (user.id === product.sellerId || user.role === "ADMIN" || product.price === 0) {
         hasAccess = true;
       } else {
         const access = await prisma.quizAccess.findUnique({
@@ -94,7 +94,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Check access
     let access = null;
-    if (user.id !== product.sellerId && user.role !== "ADMIN") {
+    if (user.id !== product.sellerId && user.role !== "ADMIN" && product.price > 0) {
       access = await prisma.quizAccess.findUnique({
         where: { userId_productId: { userId: user.id, productId } },
       });

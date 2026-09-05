@@ -287,17 +287,6 @@ export default function Header() {
                   </div>
                 )}
               </div>
-
-              <Link
-                href="/marketplace"
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === "/marketplace"
-                    ? "text-primary-600 bg-primary-50 dark:bg-primary-950/40"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
-                }`}
-              >
-                Chợ sinh viên
-              </Link>
             </nav>
 
             {/* Search Bar with Ctrl+K */}

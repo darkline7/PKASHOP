@@ -105,8 +105,9 @@ export default function SellPage() {
     }
 
     if (form.type === "QUIZ") {
-      if (form.price !== "15000" && form.price !== "20000") {
-        alert("Quiz trắc nghiệm chỉ có 2 mức giá cố định: 15.000đ hoặc 20.000đ.");
+      const qPrice = Number(form.price);
+      if (qPrice !== 0 && qPrice !== 15000 && qPrice !== 20000) {
+        alert("Quiz trắc nghiệm chỉ có 3 mức giá: Miễn phí (0đ), 15.000đ hoặc 20.000đ.");
         return;
       }
       if (form.quizQuestions.length === 0) {
@@ -259,10 +260,10 @@ function Step1({ form, setForm, setStep }: any) {
         {[
           {
             v: "QUIZ",
-            badge: "30% hoa hồng • Hạn 7 ngày",
+            badge: "Hạn 7 ngày • Miễn phí hoặc Có phí",
             l: "🧠 Quiz trắc nghiệm",
-            d: "Up file txt câu hỏi, người mua làm trắc nghiệm trực tiếp trên web. 2 mức giá: 15.000đ hoặc 20.000đ.",
-            action: "Đăng bán Quiz",
+            d: "Up file txt câu hỏi, người mua làm trắc nghiệm trực tiếp trên web. 3 mức giá: Miễn phí (0đ), 15.000đ hoặc 20.000đ.",
+            action: "Đăng Quiz",
           },
           {
             v: "DOCUMENT",

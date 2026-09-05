@@ -67,6 +67,44 @@ export default function AdminSettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-5 space-y-4">
           <h3 className="font-bold text-foreground text-sm border-b border-border/60 pb-2">
+            ✈️ Cấu hình Telegram Bot (Nhận tin nhắn & Thông báo)
+          </h3>
+          <div className="space-y-3">
+            <Input
+              label="Telegram Bot Token"
+              placeholder="VD: 123456789:ABCdefGhIJKlmNoPQRstuVWXyz"
+              value={settings["telegram_bot_token"] || ""}
+              onChange={(e: any) =>
+                setSettings({ ...settings, telegram_bot_token: e.target.value })
+              }
+            />
+            <Input
+              label="Telegram Chat ID (Nhóm hoặc Cá nhân nhận tin nhắn)"
+              placeholder="VD: -100123456789 hoặc 987654321"
+              value={settings["telegram_chat_id"] || ""}
+              onChange={(e: any) =>
+                setSettings({ ...settings, telegram_chat_id: e.target.value })
+              }
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Mỗi khi có tin nhắn chat giữa người mua và người bán, Bot sẽ gửi bản sao thông báo trực tiếp đến Telegram để bạn đọc ngay trên điện thoại!
+            </p>
+            <Button
+              size="sm"
+              variant="gradient"
+              onClick={async () => {
+                await handleSaveSetting("telegram_bot_token", settings["telegram_bot_token"] || "");
+                await handleSaveSetting("telegram_chat_id", settings["telegram_chat_id"] || "");
+              }}
+              isLoading={saving}
+            >
+              <Save className="w-3.5 h-3.5 mr-1" /> Lưu cấu hình Telegram
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="p-5 space-y-4">
+          <h3 className="font-bold text-foreground text-sm border-b border-border/60 pb-2">
             🛡️ Bảo mật & Xác thực reCAPTCHA
           </h3>
           <div className="space-y-3">

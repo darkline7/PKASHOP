@@ -105,8 +105,8 @@ export async function POST(req: Request) {
     if (isNaN(finalPrice) || finalPrice < 0) finalPrice = 0;
 
     if (prodType === "QUIZ") {
-      if (finalPrice !== 15000 && finalPrice !== 20000) {
-        return NextResponse.json({ error: "Quiz chỉ có 2 mức giá cố định là 15.000đ hoặc 20.000đ." }, { status: 400 });
+      if (finalPrice !== 0 && finalPrice !== 15000 && finalPrice !== 20000) {
+        return NextResponse.json({ error: "Quiz chỉ có 3 mức giá: Miễn phí (0đ), 15.000đ hoặc 20.000đ." }, { status: 400 });
       }
       if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
         return NextResponse.json({ error: "Vui lòng nhập danh sách câu hỏi trắc nghiệm Quiz." }, { status: 400 });

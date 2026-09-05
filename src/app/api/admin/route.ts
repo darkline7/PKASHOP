@@ -142,6 +142,32 @@ export async function PATCH(req: Request) {
       if (product) await prisma.notification.create({ data: { userId: product.sellerId, title: "Sản phẩm bị từ chối", message: `"${product.title}" bị từ chối. Lý do: ${data?.reason || "Vi phạm quy định"}`, type: "PRODUCT" } });
       return NextResponse.json({ success: true });
     }
+    if (action === "hide_product") {
+      const product = await prisma.product.findUnique({ where: { id } });
+      const newStatus = product?.status === "HIDDEN" ? "ACTIVE" : "HIDDEN";
+      await prisma.product.update({ where: { id }, data: { status: newStatus } });
+      return NextResponse.json({ success: true, status: newStatus });
+    }
+    if (action === "delete_product") {
+      // Soft-delete or hard delete
+      await prisma.product.delete({ where: { id } });
+      return NextResponse.json({ success: true });
+    }
+    if (action === "update_product") {
+      const { title, price, originalPrice, description, condition, categoryId } = data;
+      await prisma.product.update({
+        where: { id },
+        data: {
+          title: title !== undefined ? title : undefined,
+          price: price !== undefined ? Number(price) : undefined,
+          originalPrice: originalPrice !== undefined ? (originalPrice ? Number(originalPrice) : null) : undefined,
+          description: description !== undefined ? description : undefined,
+          condition: condition !== undefined ? condition : undefined,
+          categoryId: categoryId !== undefined ? categoryId : undefined,
+        },
+      });
+      return NextResponse.json({ success: true });
+    }
     if (action === "update_user_role") {
       await prisma.user.update({ where: { id }, data: { role: data.role } });
       return NextResponse.json({ success: true });

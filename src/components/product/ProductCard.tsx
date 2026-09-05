@@ -31,7 +31,7 @@ function ProductCardComponent({ product }: { product: Product }) {
             {product.type === "DOCUMENT" && <Badge variant="info">📄 Tài liệu</Badge>}
             {product.type === "PHYSICAL" && (
               <Badge variant="success">
-                {product.price === 0 ? "🎁 Đồ SV (0đ)" : "📦 Pass đồ"}
+                {product.price === 0 ? "🎁 Đồ sinh viên (0đ)" : "🎁 Đồ sinh viên"}
               </Badge>
             )}
             {product.isFeatured && <Badge variant="warning">⭐ Nổi bật</Badge>}

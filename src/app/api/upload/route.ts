@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { existsSync } from "fs";
 import { getCurrentUser } from "@/lib/auth";
 
 // Allowed extensions and mime types for security
@@ -60,6 +61,9 @@ export async function POST(req: Request) {
     const filename = `${uniqueSuffix}.${ext}`;
 
     const uploadDir = join(process.cwd(), "public", "uploads");
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true });
+    }
     const filePath = join(uploadDir, filename);
 
     await writeFile(filePath, buffer);

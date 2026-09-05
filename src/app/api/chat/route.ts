@@ -2,6 +2,46 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
+async function notifyTelegramNewMessage(recipientId: string, senderName: string, content: string, conversationId: string) {
+  try {
+    const recipient = await prisma.user.findUnique({
+      where: { id: recipientId },
+      select: { telegram: true, name: true },
+    });
+
+    const botSetting = await prisma.systemSetting.findMany({
+      where: { key: { in: ["telegram_bot_token", "telegram_chat_id"] } },
+    });
+    const settingsMap: Record<string, string> = {};
+    botSetting.forEach((s) => {
+      settingsMap[s.key] = s.value;
+    });
+
+    const botToken = settingsMap["telegram_bot_token"] || process.env.TELEGRAM_BOT_TOKEN;
+    const adminChatId = settingsMap["telegram_chat_id"] || process.env.TELEGRAM_CHAT_ID;
+
+    if (!botToken) return;
+
+    // Send notification to admin/system channel or recipient
+    const teleTarget = recipient?.telegram ? `\n👤 Nhận: @${recipient.telegram.replace("@", "")}` : "";
+    const text = `💬 *Tin nhắn mới trên PKASHOP*:\n\n*Từ:* ${senderName}${teleTarget}\n*Nội dung:* ${content}\n\n👉 [Mở hộp thư trên web](${process.env.NEXT_PUBLIC_APP_URL || "https://taphoapka.shop"}/messages?id=${conversationId})`;
+
+    if (adminChatId) {
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: adminChatId,
+          text,
+          parse_mode: "Markdown",
+        }),
+      });
+    }
+  } catch (err) {
+    console.error("Failed to forward chat to Telegram:", err);
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const user = await getCurrentUser();
@@ -76,6 +116,9 @@ export async function POST(req: Request) {
     await prisma.notification.create({
       data: { userId: recipientId, title: "Tin nhắn mới", message: `${user.name}: ${content.substring(0, 50)}`, type: "CHAT", link: `/messages?id=${conv.id}` },
     });
+
+    // Forward to Telegram asynchronously
+    notifyTelegramNewMessage(recipientId, user.name, content, conv.id);
 
     return NextResponse.json({ success: true, message, conversationId: conv.id });
   } catch (error) {
