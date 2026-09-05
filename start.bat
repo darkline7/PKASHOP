@@ -15,6 +15,7 @@ if not exist "node_modules" (
 echo [3/3] Dong bo database Prisma
 call npx prisma generate
 call npx prisma db push --accept-data-loss
+call node prisma/ensure-admin.js
 
 if exist ".next\trace" (
     rmdir /s /q .next 2>nul

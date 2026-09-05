@@ -39,9 +39,10 @@ if not exist "node_modules" (
 )
 
 :: 5. Dong bo database Prisma
-echo [4/5] Dong bo schema database Prisma
+echo [4/5] Dong bo database Prisma
 call npx prisma generate
 call npx prisma db push --accept-data-loss
+call node prisma/ensure-admin.js
 
 :: 6. Kiem tra va build Next.js neu can
 echo [5/5] Kiem tra ban build
