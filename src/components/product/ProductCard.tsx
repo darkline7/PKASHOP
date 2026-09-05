@@ -29,7 +29,11 @@ function ProductCardComponent({ product }: { product: Product }) {
           <div className="absolute top-2 left-2 flex gap-1.5 flex-wrap">
             {product.type === "QUIZ" && <Badge variant="warning">🧠 Quiz 7 ngày</Badge>}
             {product.type === "DOCUMENT" && <Badge variant="info">📄 Tài liệu</Badge>}
-            {product.type === "PHYSICAL" && <Badge variant="success">🎁 Đồ SV (0đ)</Badge>}
+            {product.type === "PHYSICAL" && (
+              <Badge variant="success">
+                {product.price === 0 ? "🎁 Đồ SV (0đ)" : "📦 Pass đồ"}
+              </Badge>
+            )}
             {product.isFeatured && <Badge variant="warning">⭐ Nổi bật</Badge>}
           </div>
           {product.originalPrice && product.originalPrice > product.price && (

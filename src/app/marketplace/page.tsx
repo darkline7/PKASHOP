@@ -114,7 +114,7 @@ function Sidebar({ show, cats, search, setSearch, type, setType, category, setCa
             { v: "", l: "Tất cả" },
             { v: "QUIZ", l: "🧠 Quiz trắc nghiệm" },
             { v: "DOCUMENT", l: "📄 Tài liệu số" },
-            { v: "PHYSICAL", l: "🎁 Đồ sinh viên (Miễn phí)" },
+            { v: "PHYSICAL", l: "🎁 Pass đồ sinh viên" },
           ].map(t => (
             <button key={t.v} onClick={() => setType(t.v)} className={`w-full text-left px-3 py-1.5 rounded-lg text-sm ${type === t.v ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30" : "hover:bg-muted"}`}>{t.l}</button>
           ))}

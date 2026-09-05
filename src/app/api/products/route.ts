@@ -102,6 +102,8 @@ export async function POST(req: Request) {
 
     // Validate pricing rules
     let finalPrice = Number(price);
+    if (isNaN(finalPrice) || finalPrice < 0) finalPrice = 0;
+
     if (prodType === "QUIZ") {
       if (finalPrice !== 15000 && finalPrice !== 20000) {
         return NextResponse.json({ error: "Quiz chỉ có 2 mức giá cố định là 15.000đ hoặc 20.000đ." }, { status: 400 });
@@ -109,8 +111,10 @@ export async function POST(req: Request) {
       if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
         return NextResponse.json({ error: "Vui lòng nhập danh sách câu hỏi trắc nghiệm Quiz." }, { status: 400 });
       }
-    } else if (prodType === "PHYSICAL") {
-      finalPrice = 0; // Đồ sinh viên pass miễn phí
+    } else if (prodType === "DOCUMENT") {
+      if (finalPrice <= 0) {
+        return NextResponse.json({ error: "Vui lòng nhập giá bán tài liệu hợp lệ." }, { status: 400 });
+      }
     }
 
     if (!title || !description || !categoryId || !thumbnail) {

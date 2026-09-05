@@ -126,6 +126,11 @@ export default function SellPage() {
         alert("Vui lòng nhập giá bán tài liệu.");
         return;
       }
+    } else if (form.type === "PHYSICAL") {
+      if (form.price === "" || isNaN(Number(form.price)) || Number(form.price) < 0) {
+        alert("Vui lòng nhập giá pass đồ (hoặc nhập 0 nếu tặng miễn phí).");
+        return;
+      }
     }
 
     setLoading(true);
@@ -134,7 +139,7 @@ export default function SellPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
-        price: form.type === "PHYSICAL" ? 0 : Number(form.price),
+        price: Number(form.price) || 0,
         originalPrice: form.originalPrice ? Number(form.originalPrice) : null,
         images: form.images ? form.images.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         proofImages: form.proofImages ? [form.proofImages] : [],
@@ -176,7 +181,7 @@ export default function SellPage() {
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">📤 Đăng bán & Chia sẻ</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Đăng bán Quiz trắc nghiệm, tài liệu uy tín hoặc pass đồ dùng sinh viên hoàn toàn miễn phí.
+            Đăng bán Quiz trắc nghiệm, tài liệu uy tín hoặc pass đồ dùng sinh viên nhanh chóng, tiện lợi.
           </p>
         </div>
 
@@ -268,10 +273,10 @@ function Step1({ form, setForm, setStep }: any) {
           },
           {
             v: "PHYSICAL",
-            badge: "Miễn phí 100% • Tự xoá sau 7 ngày",
+            badge: "Pass đồ • Tự xoá sau 7 ngày",
             l: "🎁 Pass đồ sinh viên",
-            d: "Pass giáo trình cũ, máy tính, vật phẩm sinh viên. Người mua chat trực tiếp trên web.",
-            action: "Đăng đồ miễn phí",
+            d: "Pass giáo trình cũ, máy tính, vật phẩm sinh viên. Người bán tự định giá hoặc pass 0đ, chat trên web.",
+            action: "Đăng bài pass đồ",
           },
         ].map((t) => (
           <button
@@ -281,7 +286,7 @@ function Step1({ form, setForm, setStep }: any) {
               setForm({
                 ...form,
                 type: t.v,
-                price: t.v === "QUIZ" ? "15000" : t.v === "PHYSICAL" ? "0" : "",
+                price: t.v === "QUIZ" ? "15000" : "",
               });
               setStep(2);
             }}

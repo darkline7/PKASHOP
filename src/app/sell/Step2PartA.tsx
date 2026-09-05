@@ -100,16 +100,47 @@ export function Step2PartA({ form, set, cats, setForm }: any) {
           </div>
         ) : (
           <div>
-            <label className="text-sm font-medium block mb-1.5 text-foreground">Giá pass đồ</label>
-            <div className="h-10 rounded-lg border border-border bg-muted/40 px-3 flex items-center text-sm font-semibold text-emerald-600">
-              0đ (Miễn phí hỗ trợ sinh viên)
-            </div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">Giá pass đồ (VNĐ) *</label>
+            <Input
+              type="number"
+              placeholder="VD: 50000 (Nhập 0 nếu cho tặng miễn phí)"
+              value={form.price}
+              onChange={set("price")}
+              required
+            />
             <p className="text-[11px] text-muted-foreground mt-1">
-              Tin đăng sẽ tự động hết hạn sau 7 ngày.
+              Nhập giá muốn pass lại (hoặc nhập 0đ nếu tặng miễn phí). Tin đăng tự động ẩn sau 7 ngày.
             </p>
           </div>
         )}
       </div>
+
+      {form.type === "PHYSICAL" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">Tình trạng đồ</label>
+            <select
+              value={form.condition || "LIKE_NEW"}
+              onChange={set("condition")}
+              className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="NEW">Mới 100% (Chưa dùng)</option>
+              <option value="LIKE_NEW">Như mới (99%)</option>
+              <option value="GOOD">Còn tốt (85% - 95%)</option>
+              <option value="FAIR">Đã qua sử dụng (chấp nhận được)</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium block mb-1.5 text-foreground">Giá gốc khi mua mới (VNĐ, tuỳ chọn)</label>
+            <Input
+              type="number"
+              placeholder="VD: 150000"
+              value={form.originalPrice || ""}
+              onChange={set("originalPrice")}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

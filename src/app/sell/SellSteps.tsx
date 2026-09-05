@@ -48,8 +48,8 @@ export function Step3({ form, setStep, handleSubmit, loading }: any) {
           <div className="p-3 rounded-lg bg-muted/40 space-y-1">
             <p className="text-xs text-muted-foreground font-medium">Giá bán</p>
             <p className="font-bold text-primary-600 text-base">
-              {form.type === "PHYSICAL"
-                ? "Miễn phí"
+              {Number(form.price) === 0 && form.type === "PHYSICAL"
+                ? "Miễn phí (0đ)"
                 : form.price
                 ? Number(form.price).toLocaleString("vi-VN") + " VNĐ"
                 : "—"}
