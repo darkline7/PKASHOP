@@ -244,7 +244,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ success: true });
     }
     if (action === "update_product") {
-      const { title, price, originalPrice, description, condition, categoryId } = data;
+      const { title, price, originalPrice, description, condition, categoryId, thumbnail, images, documentUrl } = data;
       await prisma.product.update({
         where: { id },
         data: {
@@ -254,6 +254,9 @@ export async function PATCH(req: Request) {
           description: description !== undefined ? description : undefined,
           condition: condition !== undefined ? condition : undefined,
           categoryId: categoryId !== undefined ? categoryId : undefined,
+          thumbnail: thumbnail !== undefined ? thumbnail : undefined,
+          images: images !== undefined ? (typeof images === "string" ? images : JSON.stringify(images)) : undefined,
+          documentUrl: documentUrl !== undefined ? documentUrl : undefined,
         },
       });
       return NextResponse.json({ success: true });

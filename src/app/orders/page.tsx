@@ -1,10 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { Badge, Card, EmptyState } from "@/components/ui/Components";
+import DownloadDocumentButton from "@/components/order/DownloadDocumentButton";
 import { useAuthStore } from "@/stores";
 import { formatVND, formatRelativeTime } from "@/lib/utils";
 import type { Order } from "@/types";
@@ -40,22 +42,53 @@ export default function OrdersPage() {
         </div>
         {loading ? <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}</div>
         : orders.length === 0 ? <EmptyState title="Chưa có đơn hàng" description="Bắt đầu mua sắm ngay" />
-        : <div className="space-y-4">{orders.map(o => (
-          <Card key={o.id} className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div><span className="font-mono text-sm font-semibold">#{o.orderNumber}</span><span className="text-xs text-muted-foreground ml-2">{formatRelativeTime(o.createdAt)}</span></div>
-              <Badge variant={STATUSES[o.status]?.variant || "default"}>{STATUSES[o.status]?.label || o.status}</Badge>
-            </div>
-            {o.items?.map(item => (
-              <div key={item.id} className="flex items-center gap-3 py-2 border-t border-border">
-                <div className="w-12 h-12 rounded-lg overflow-hidden relative bg-muted flex-shrink-0"><Image src={item.thumbnail || "/placeholder.jpg"} alt="" fill className="object-cover" sizes="48px" /></div>
-                <div className="flex-1"><p className="text-sm font-medium">{item.title}</p><p className="text-xs text-muted-foreground">x{item.quantity}</p></div>
-                <span className="text-sm font-semibold">{formatVND(item.price * item.quantity)}</span>
+        : <div className="space-y-4">{orders.map(o => {
+          const isPaid = o.status === "PAID" || o.status === "COMPLETED";
+          return (
+            <Card key={o.id} className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="font-mono text-sm font-semibold">#{o.orderNumber}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{formatRelativeTime(o.createdAt)}</span>
+                </div>
+                <Badge variant={STATUSES[o.status]?.variant || "default"}>{STATUSES[o.status]?.label || o.status}</Badge>
               </div>
-            ))}
-            <div className="flex justify-between mt-3 pt-3 border-t border-border"><span className="text-sm text-muted-foreground">Tổng</span><span className="font-bold text-primary-600">{formatVND(o.finalAmount)}</span></div>
-          </Card>
-        ))}</div>}
+              {o.items?.map(item => {
+                const itemDocUrl = item.documentUrl || item.product?.documentUrl;
+                const isDigitalDoc = item.type === "DOCUMENT" || item.product?.type === "DOCUMENT" || (!item.type && !item.product?.type);
+
+                return (
+                  <div key={item.id} className="py-3 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden relative bg-muted flex-shrink-0">
+                        <Image src={item.thumbnail || "/placeholder.jpg"} alt="" fill className="object-cover" sizes="48px" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium line-clamp-1">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">x{item.quantity} · {formatVND(item.price * item.quantity)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      {isPaid && isDigitalDoc && (
+                        <DownloadDocumentButton documentUrl={itemDocUrl} title={item.title} />
+                      )}
+                      {item.product?.slug && (
+                        <Link href={`/product/${item.product.slug}`} className="text-xs text-muted-foreground hover:text-primary-600 underline">
+                          Chi tiết SP
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex justify-between mt-3 pt-3 border-t border-border">
+                <span className="text-sm text-muted-foreground">Tổng thanh toán</span>
+                <span className="font-bold text-primary-600">{formatVND(o.finalAmount)}</span>
+              </div>
+            </Card>
+          );
+        })}</div>}
       </main><Footer />
     </div>
   );

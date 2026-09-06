@@ -10,6 +10,7 @@ import { formatVND } from "@/lib/utils";
 import { Check, X, RefreshCw, Eye, Edit2, Trash2, EyeOff } from "lucide-react";
 import { Input, Textarea } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Components";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -75,7 +76,14 @@ export default function AdminProductsPage() {
   };
 
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", price: "", originalPrice: "", description: "" });
+  const [editForm, setEditForm] = useState({
+    title: "",
+    price: "",
+    originalPrice: "",
+    description: "",
+    thumbnail: "",
+    documentUrl: "",
+  });
   const [savingEdit, setSavingEdit] = useState(false);
 
   const handleToggleHide = async (id: string) => {
@@ -117,10 +125,12 @@ export default function AdminProductsPage() {
   const openEdit = (p: any) => {
     setEditingProduct(p);
     setEditForm({
-      title: p.title,
-      price: String(p.price),
+      title: p.title || "",
+      price: String(p.price || 0),
       originalPrice: p.originalPrice ? String(p.originalPrice) : "",
       description: p.description || "",
+      thumbnail: p.thumbnail || "",
+      documentUrl: p.documentUrl || "",
     });
   };
 
@@ -140,6 +150,8 @@ export default function AdminProductsPage() {
             price: editForm.price,
             originalPrice: editForm.originalPrice,
             description: editForm.description,
+            thumbnail: editForm.thumbnail,
+            documentUrl: editForm.documentUrl,
           },
         }),
       });
@@ -153,6 +165,8 @@ export default function AdminProductsPage() {
                   price: Number(editForm.price),
                   originalPrice: editForm.originalPrice ? Number(editForm.originalPrice) : null,
                   description: editForm.description,
+                  thumbnail: editForm.thumbnail,
+                  documentUrl: editForm.documentUrl,
                 }
               : p
           )
@@ -262,6 +276,22 @@ export default function AdminProductsPage() {
                   onChange={(e: any) => setEditForm({ ...editForm, originalPrice: e.target.value })}
                 />
               </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium block text-foreground">Ảnh đại diện sản phẩm</label>
+                <ImageUpload
+                  value={editForm.thumbnail}
+                  onChange={(url) => setEditForm({ ...editForm, thumbnail: url })}
+                  placeholder="Chọn ảnh hoặc dán link ảnh mới"
+                />
+              </div>
+              {editingProduct.type === "DOCUMENT" && (
+                <Input
+                  label="Link file tài liệu (URL tải về)"
+                  placeholder="https://... hoặc /uploads/..."
+                  value={editForm.documentUrl}
+                  onChange={(e: any) => setEditForm({ ...editForm, documentUrl: e.target.value })}
+                />
+              )}
               <Textarea
                 label="Mô tả chi tiết"
                 rows={4}

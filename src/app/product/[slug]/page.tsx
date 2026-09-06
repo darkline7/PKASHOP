@@ -121,7 +121,7 @@ function InfoSection({ product, cond }: { product: Product & { reviews: Review[]
             </div>
           </div>
         ) : (
-          <AddToCartButton productId={product.id} />
+          <AddToCartButton productId={product.id} isDocument={product.type === "DOCUMENT"} />
         )}
         <div className="flex items-center justify-between px-1 pt-1">
           <ReportModal productId={product.id} />

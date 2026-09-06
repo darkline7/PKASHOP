@@ -23,6 +23,11 @@ export async function GET(req: Request) {
             select: {
               id: true, title: true, price: true, quantity: true, type: true,
               thumbnail: true, documentUrl: true, downloadCount: true, productId: true,
+              product: {
+                select: {
+                  id: true, slug: true, title: true, type: true, documentUrl: true,
+                },
+              },
             },
           },
           buyer: { select: { id: true, name: true, avatar: true, email: true } },
@@ -93,7 +98,7 @@ export async function POST(req: Request) {
               create: items.map(i => ({
                 productId: i.product.id, title: i.product.title, price: i.product.price,
                 quantity: i.quantity, type: i.product.type, thumbnail: i.product.thumbnail,
-                documentUrl: i.product.type === "DOCUMENT" ? i.product.documentUrl : null,
+                documentUrl: (i.product.type === "DOCUMENT" || !i.product.type) ? (i.product.documentUrl || null) : null,
               })),
             },
           },
