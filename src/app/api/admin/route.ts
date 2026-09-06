@@ -378,6 +378,7 @@ export async function PATCH(req: Request) {
     if (action === "save_setting") {
       const { key, value } = data;
       if (!key) return NextResponse.json({ error: "Thiếu key" }, { status: 400 });
+      settingsCache = null; // Invalidate cache immediately
       await prisma.systemSetting.upsert({
         where: { key },
         update: { value: String(value) },

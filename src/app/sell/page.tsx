@@ -197,6 +197,9 @@ export default function SellPage() {
             cats={cats}
             setStep={setStep}
             handleRawQuizChange={handleRawQuizChange}
+            onCategoryCreated={(newCat: Category) => {
+              setCats((prev) => [...prev, newCat]);
+            }}
           />
         )}
         {step === 3 && <Step3 form={form} setStep={setStep} handleSubmit={handleSubmit} loading={loading} />}

@@ -1,11 +1,41 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Button, Input, Textarea } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Components";
-import ImageUpload from "@/components/ui/ImageUpload";
-import { MapPin, ArrowLeft, ArrowRight, UploadCloud, FileText, HelpCircle, ShieldCheck } from "lucide-react";
+import { Plus, X, FolderPlus } from "lucide-react";
 
-export function Step2PartA({ form, set, cats, setForm }: any) {
+export function Step2PartA({ form, set, cats, setForm, onCategoryCreated }: any) {
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [creatingCat, setCreatingCat] = useState(false);
+
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    setCreatingCat(true);
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          type: form.type === "PHYSICAL" ? "PHYSICAL" : "DOCUMENT",
+          icon: form.type === "QUIZ" ? "🧠" : form.type === "PHYSICAL" ? "🎁" : "📚",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Không thể tạo danh mục");
+      if (data.category) {
+        if (onCategoryCreated) onCategoryCreated(data.category);
+        setForm((prev: any) => ({ ...prev, categoryId: data.category.id }));
+        setNewCatName("");
+        setShowAddCat(false);
+      }
+    } catch (err: any) {
+      alert(err?.message || "Lỗi tạo danh mục");
+    } finally {
+      setCreatingCat(false);
+    }
+  };
   return (
     <>
       <div>
@@ -44,7 +74,58 @@ export function Step2PartA({ form, set, cats, setForm }: any) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-sm font-medium block mb-1.5 text-foreground">Danh mục môn / ngành *</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-foreground">Danh mục môn / ngành *</label>
+            <button
+              type="button"
+              onClick={() => setShowAddCat(!showAddCat)}
+              className="text-xs text-primary-600 hover:text-primary-700 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer"
+            >
+              {showAddCat ? (
+                <>
+                  <X className="w-3 h-3" /> Đóng tạo
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3 h-3" /> + Thêm danh mục
+                </>
+              )}
+            </button>
+          </div>
+
+          {showAddCat && (
+            <div className="p-2.5 rounded-xl border border-primary-500/30 bg-primary-500/5 space-y-2 mb-2">
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Tạo danh mục mới cho môn học hoặc đồ dùng của bạn:
+              </p>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  placeholder="VD: Triết học Mác - Lênin, Hóa đại cương..."
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateCategory(e);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="gradient"
+                  onClick={handleCreateCategory}
+                  isLoading={creatingCat}
+                  className="h-9 px-3 text-xs shrink-0"
+                >
+                  <FolderPlus className="w-3.5 h-3.5 mr-1" /> Tạo
+                </Button>
+              </div>
+            </div>
+          )}
+
           <select
             value={form.categoryId}
             onChange={set("categoryId")}

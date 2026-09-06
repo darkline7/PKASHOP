@@ -6,11 +6,25 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Step2PartA } from "./Step2PartA";
 import { Step2UploadsSection } from "./Step2UploadsSection";
 
-export function Step2({ form, setForm, set, cats, setStep, handleRawQuizChange }: any) {
+export function Step2({
+  form,
+  setForm,
+  set,
+  cats,
+  setStep,
+  handleRawQuizChange,
+  onCategoryCreated,
+}: any) {
   return (
     <div className="space-y-6">
       <Card className="p-5 sm:p-6 space-y-5">
-        <Step2PartA form={form} set={set} cats={cats} setForm={setForm} />
+        <Step2PartA
+          form={form}
+          set={set}
+          cats={cats}
+          setForm={setForm}
+          onCategoryCreated={onCategoryCreated}
+        />
         <Step2UploadsSection form={form} setForm={setForm} set={set} handleRawQuizChange={handleRawQuizChange} />
       </Card>
 

@@ -28,6 +28,8 @@ import {
   Star,
 } from "lucide-react";
 
+import RuleAnnouncementModal from "@/components/home/RuleAnnouncementModal";
+
 const CATEGORY_META: Record<
   string,
   { icon: React.ElementType; color: string; bg: string; desc: string }
@@ -70,8 +72,20 @@ const CATEGORY_META: Record<
   },
 };
 
-export default function HomePage({ initialFeatured, initialLatest, initialCategories }: {
-  initialFeatured?: Product[]; initialLatest?: Product[]; initialCategories?: Category[];
+export default function HomePage({
+  initialFeatured,
+  initialLatest,
+  initialCategories,
+  popupConfig,
+}: {
+  initialFeatured?: Product[];
+  initialLatest?: Product[];
+  initialCategories?: Category[];
+  popupConfig?: {
+    enabled: boolean;
+    title: string;
+    content: string;
+  };
 } = {}) {
   const router = useRouter();
   const [featured, setFeatured] = useState<Product[]>(initialFeatured || []);
@@ -79,6 +93,31 @@ export default function HomePage({ initialFeatured, initialLatest, initialCatego
   const [categories, setCategories] = useState<Category[]>(initialCategories || []);
   const [loading, setLoading] = useState(!initialFeatured);
   const [heroSearch, setHeroSearch] = useState("");
+  const [popup, setPopup] = useState(
+    popupConfig || {
+      enabled: true,
+      title: "QUY ĐỊNH & CẨM NANG SỬ DỤNG AN TOÀN",
+      content: "",
+    }
+  );
+
+  // If no SSR data or popupConfig not passed, load from settings API
+  useEffect(() => {
+    if (!popupConfig) {
+      fetch("/api/admin?action=settings")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.settings) {
+            setPopup({
+              enabled: d.settings.home_popup_enabled !== "false",
+              title: d.settings.home_popup_title || "QUY ĐỊNH & CẨM NANG SỬ DỤNG AN TOÀN",
+              content: d.settings.home_popup_content || "",
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [popupConfig]);
 
   // Only fetch client-side if no SSR data was provided
   useEffect(() => {
@@ -107,6 +146,11 @@ export default function HomePage({ initialFeatured, initialLatest, initialCatego
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Header />
+      <RuleAnnouncementModal
+        enabled={popup.enabled}
+        title={popup.title}
+        content={popup.content}
+      />
       <main className="flex-1">
         {/* HERO SECTION */}
         <section className="relative overflow-hidden pt-12 pb-20 md:pt-16 md:pb-28 border-b border-border/60">

@@ -65,6 +65,65 @@ export default function AdminSettingsPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="p-5 space-y-4 md:col-span-2">
+          <h3 className="font-bold text-foreground text-sm border-b border-border/60 pb-2">
+            📢 Thông báo nổi Trang chủ (Quy định &amp; Cẩm nang an toàn)
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-foreground">Bật thông báo nổi:</label>
+              <input
+                type="checkbox"
+                checked={settings["home_popup_enabled"] !== "false"}
+                onChange={(e) =>
+                  setSettings({ ...settings, home_popup_enabled: e.target.checked ? "true" : "false" })
+                }
+                className="w-4 h-4 accent-primary-600 rounded cursor-pointer"
+              />
+              <span className="text-xs text-muted-foreground">
+                {settings["home_popup_enabled"] !== "false" ? "Đang bật (Hiển thị cho khách & sinh viên)" : "Đang tắt"}
+              </span>
+            </div>
+
+            <Input
+              label="Tiêu đề thông báo nổi"
+              placeholder="QUY ĐỊNH & CẨM NANG SỬ DỤNG AN TOÀN"
+              value={settings["home_popup_title"] || ""}
+              onChange={(e: any) =>
+                setSettings({ ...settings, home_popup_title: e.target.value })
+              }
+            />
+
+            <div>
+              <label className="text-sm font-medium block mb-1 text-foreground">
+                Nội dung quy định &amp; cẩm nang (Hỗ trợ xuống dòng)
+              </label>
+              <textarea
+                rows={8}
+                value={settings["home_popup_content"] || ""}
+                onChange={(e: any) =>
+                  setSettings({ ...settings, home_popup_content: e.target.value })
+                }
+                placeholder="Nhập nội dung quy định mua bán, trách nhiệm nội dung, quy tắc 3 KHÔNG..."
+                className="w-full rounded-xl border border-border bg-background p-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono leading-relaxed"
+              />
+            </div>
+
+            <Button
+              size="sm"
+              variant="gradient"
+              onClick={async () => {
+                await handleSaveSetting("home_popup_enabled", settings["home_popup_enabled"] || "true");
+                await handleSaveSetting("home_popup_title", settings["home_popup_title"] || "");
+                await handleSaveSetting("home_popup_content", settings["home_popup_content"] || "");
+              }}
+              isLoading={saving}
+            >
+              <Save className="w-3.5 h-3.5 mr-1" /> Lưu thông báo nổi trang chủ
+            </Button>
+          </div>
+        </Card>
+
         <Card className="p-5 space-y-4">
           <h3 className="font-bold text-foreground text-sm border-b border-border/60 pb-2">
             ✈️ Cấu hình Telegram Bot (Nhận tin nhắn & Thông báo)
