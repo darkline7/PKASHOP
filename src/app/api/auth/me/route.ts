@@ -33,6 +33,7 @@ export async function PUT(req: Request) {
         className: data.className !== undefined ? data.className : undefined,
         major: data.major !== undefined ? data.major : undefined,
         telegram: data.telegram !== undefined ? data.telegram : undefined,
+        telegramChatId: data.telegramChatId !== undefined ? data.telegramChatId : undefined,
         isVerified: (data.studentId && data.className && data.major && (data.phone || user.phone)) ? true : undefined,
       },
     });

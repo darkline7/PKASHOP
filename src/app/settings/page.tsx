@@ -22,9 +22,15 @@ export default function SettingsPage() {
     className: "",
     major: "",
     telegram: "",
+    telegramChatId: "",
   });
+  const [botInfo, setBotInfo] = useState<{ botUsername: string | null; configured: boolean }>({ botUsername: null, configured: false });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    fetch("/api/telegram/bot-info").then(r => r.json()).then(d => setBotInfo(d)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
@@ -40,6 +46,7 @@ export default function SettingsPage() {
       className: (user as any).className || "",
       major: (user as any).major || "",
       telegram: (user as any).telegram || "",
+      telegramChatId: (user as any).telegramChatId || "",
     });
   }, [user, router]);
 
@@ -90,6 +97,60 @@ export default function SettingsPage() {
               <Input label="Telegram Username (để liên hệ)" value={form.telegram} onChange={set("telegram")} placeholder="VD: @phenikaa_user" />
             </div>
           </div>
+
+          <div className="pt-2 border-t border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm flex items-center gap-1.5">
+                ✈️ Nhận tin nhắn chat qua Telegram
+              </h3>
+              {form.telegramChatId ? (
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  ✓ Đã kết nối ({form.telegramChatId})
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                  Chưa kết nối
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Mỗi khi có người nhắn tin hỏi mua tài liệu hoặc hẹn trao đổi đồ cũ trên web, Bot Telegram sẽ tự động gửi bản tin trực tiếp vào Telegram của bạn!
+            </p>
+
+            {botInfo.configured && botInfo.botUsername ? (
+              <div className="bg-primary-50 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800/50 rounded-xl p-3 text-xs space-y-2">
+                <p className="font-medium text-primary-900 dark:text-primary-100">
+                  ⚡ Cách kết nối siêu nhanh bằng 1 chạm:
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={`https://t.me/${botInfo.botUsername}?start=${user?.username || ""}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white font-medium shadow-sm transition-colors text-xs"
+                  >
+                    👉 Mở Bot @{botInfo.botUsername} & Bấm START
+                  </a>
+                  <span className="text-muted-foreground text-[11px]">
+                    (Sau khi bấm Start trên Telegram, quay lại tải lại trang này)
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="space-y-1">
+              <Input
+                label="Telegram Chat ID của bạn"
+                value={form.telegramChatId}
+                onChange={set("telegramChatId")}
+                placeholder="VD: 123456789"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Nếu không dùng nút trên, bạn có thể chat <code>/myid</code> với Bot để lấy Chat ID rồi dán vào đây và ấn Lưu.
+              </p>
+            </div>
+          </div>
+
           <Button variant="gradient" size="lg" className="w-full" onClick={handleSave} isLoading={loading}>Lưu thay đổi</Button>
         </Card>
       </main><Footer />

@@ -16,6 +16,7 @@ export interface User {
   className?: string | null;
   major?: string | null;
   telegram?: string | null;
+  telegramChatId?: string | null;
   isVerified: boolean;
   rating: number;
   totalSales: number;

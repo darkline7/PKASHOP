@@ -6,7 +6,7 @@ async function notifyTelegramNewMessage(recipientId: string, senderName: string,
   try {
     const recipient = await prisma.user.findUnique({
       where: { id: recipientId },
-      select: { telegram: true, name: true },
+      select: { telegram: true, telegramChatId: true, name: true, username: true },
     });
 
     const botSetting = await prisma.systemSetting.findMany({
@@ -22,20 +22,48 @@ async function notifyTelegramNewMessage(recipientId: string, senderName: string,
 
     if (!botToken) return;
 
-    // Send notification to admin/system channel or recipient
-    const teleTarget = recipient?.telegram ? `\n👤 Nhận: @${recipient.telegram.replace("@", "")}` : "";
-    const text = `💬 *Tin nhắn mới trên PKASHOP*:\n\n*Từ:* ${senderName}${teleTarget}\n*Nội dung:* ${content}\n\n👉 [Mở hộp thư trên web](${process.env.NEXT_PUBLIC_APP_URL || "https://taphoapka.shop"}/messages?id=${conversationId})`;
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://taphoapka.shop").replace(/\/+$/, "");
+    const chatUrl = `${appUrl}/messages?id=${conversationId}`;
 
-    if (adminChatId) {
-      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: adminChatId,
-          text,
-          parse_mode: "Markdown",
-        }),
-      });
+    const sendTele = async (chatId: string, text: string) => {
+      try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            parse_mode: "Markdown",
+          }),
+        });
+      } catch (err) {
+        console.error(`Failed to send telegram message to ${chatId}:`, err);
+      }
+    };
+
+    // 1. Send direct notification to recipient if they linked their Telegram Chat ID
+    if (recipient?.telegramChatId) {
+      const recipientMsg =
+        `💬 *Bạn có tin nhắn mới trên PKASHOP!*\n\n` +
+        `👤 *Từ:* ${senderName}\n` +
+        `📝 *Nội dung:* ${content}\n\n` +
+        `👉 [Nhấn vào đây để xem và trả lời trên web](${chatUrl})`;
+
+      await sendTele(recipient.telegramChatId, recipientMsg);
+    }
+
+    // 2. Send notification to admin/monitoring channel (if configured)
+    // Avoid sending twice to the same chat if admin is the recipient
+    if (adminChatId && adminChatId !== recipient?.telegramChatId) {
+      const recipientDisplay = recipient ? `${recipient.name} (@${recipient.username || recipient.telegram || "user"})` : "Ẩn danh";
+      const adminMsg =
+        `💬 *Tin nhắn mới trên PKASHOP*\n\n` +
+        `👤 *Người gửi:* ${senderName}\n` +
+        `🎯 *Người nhận:* ${recipientDisplay}\n` +
+        `📝 *Nội dung:* ${content}\n\n` +
+        `👉 [Xem hội thoại trên web](${chatUrl})`;
+
+      await sendTele(adminChatId, adminMsg);
     }
   } catch (err) {
     console.error("Failed to forward chat to Telegram:", err);

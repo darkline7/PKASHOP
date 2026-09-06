@@ -24,11 +24,44 @@ function MessagesContent() {
 
   useEffect(() => {
     if (!user) return;
-    fetch("/api/chat").then(r => r.json()).then(d => {
-      setConvos(d.conversations || []);
-      if (d.conversations?.length) setActive(d.conversations[0].id);
+    const urlId = searchParams.get("id");
+    const toUserId = searchParams.get("to");
+
+    fetch("/api/chat").then(r => r.json()).then(async (d) => {
+      const list = d.conversations || [];
+      setConvos(list);
+
+      if (urlId) {
+        setActive(urlId);
+      } else if (toUserId) {
+        // Find existing conversation with this recipient
+        const existing = list.find((c: any) =>
+          (c.participant1Id === toUserId && c.participant2Id === user.id) ||
+          (c.participant2Id === toUserId && c.participant1Id === user.id)
+        );
+        if (existing) {
+          setActive(existing.id);
+        } else {
+          // Send a greeting/init conversation
+          try {
+            const res = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ recipientId: toUserId, content: "Xin chào!" }),
+            });
+            const created = await res.json();
+            if (created.conversationId) {
+              setActive(created.conversationId);
+              // Refresh convos
+              fetch("/api/chat").then(r => r.json()).then(newData => setConvos(newData.conversations || []));
+            }
+          } catch {}
+        }
+      } else if (list.length) {
+        setActive(list[0].id);
+      }
     });
-  }, [user]);
+  }, [user, searchParams]);
 
   useEffect(() => {
     if (!active) return;

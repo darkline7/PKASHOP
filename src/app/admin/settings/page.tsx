@@ -138,27 +138,54 @@ export default function AdminSettingsPage() {
               }
             />
             <Input
-              label="Telegram Chat ID (Nhóm hoặc Cá nhân nhận tin nhắn)"
+              label="Telegram Admin Chat ID (Nhóm hoặc Cá nhân nhận bản sao tin nhắn)"
               placeholder="VD: -100123456789 hoặc 987654321"
               value={settings["telegram_chat_id"] || ""}
               onChange={(e: any) =>
                 setSettings({ ...settings, telegram_chat_id: e.target.value })
               }
             />
-            <p className="text-[11px] text-muted-foreground">
-              Mỗi khi có tin nhắn chat giữa người mua và người bán, Bot sẽ gửi bản sao thông báo trực tiếp đến Telegram để bạn đọc ngay trên điện thoại!
-            </p>
-            <Button
-              size="sm"
-              variant="gradient"
-              onClick={async () => {
-                await handleSaveSetting("telegram_bot_token", settings["telegram_bot_token"] || "");
-                await handleSaveSetting("telegram_chat_id", settings["telegram_chat_id"] || "");
-              }}
-              isLoading={saving}
-            >
-              <Save className="w-3.5 h-3.5 mr-1" /> Lưu cấu hình Telegram
-            </Button>
+            <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-3 space-y-1.5 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">💡 Tính năng Telegram hai chiều:</p>
+              <p>• <b>Admin Channel:</b> Mọi tin nhắn trao đổi trên web sẽ được copy gửi về Admin Chat ID trên để giám sát.</p>
+              <p>• <b>Người dùng cá nhân:</b> Sinh viên vào Cài đặt tài khoản &gt; liên kết Telegram Chat ID (hoặc chat <code>/start</code> với Bot), khi có ai nhắn tin cho họ trên web thì Bot sẽ gửi tin nhắn thẳng vào Telegram riêng của họ.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Button
+                size="sm"
+                variant="gradient"
+                onClick={async () => {
+                  await handleSaveSetting("telegram_bot_token", settings["telegram_bot_token"] || "");
+                  await handleSaveSetting("telegram_chat_id", settings["telegram_chat_id"] || "");
+                }}
+                isLoading={saving}
+              >
+                <Save className="w-3.5 h-3.5 mr-1" /> Lưu cấu hình Telegram
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/telegram/bot-info", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "set_webhook" }),
+                    });
+                    const d = await res.json();
+                    if (d.success) {
+                      alert(`Đã kích hoạt Webhook tự động nhận tin nhắn từ Bot Telegram thành công!\nURL: ${d.webhookUrl}`);
+                    } else {
+                      alert(`Kích hoạt Webhook thất bại: ${d.description || d.error || "Kiểm tra token hoặc domain https"}`);
+                    }
+                  } catch (e: any) {
+                    alert("Lỗi: " + e.message);
+                  }
+                }}
+              >
+                🔗 Bật Webhook nhận diện liên kết tự động (/start)
+              </Button>
+            </div>
           </div>
         </Card>
 
