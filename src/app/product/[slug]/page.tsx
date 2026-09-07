@@ -134,10 +134,17 @@ function InfoSection({ product, cond }: { product: Product & { reviews: Review[]
         <Avatar src={product.seller?.avatar} name={product.seller?.name || ""} size="lg" />
         <div className="flex-1"><Link href={`/profile/${product.seller?.username}`} className="font-semibold hover:text-primary-600">{product.seller?.name}</Link>
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><StarRating rating={product.seller?.rating || 5} /><span>{product.seller?.totalSales} đã bán</span>{product.seller?.isVerified && <Badge variant="success">✓</Badge>}</div>
-        </div><Link href={`/messages?to=${product.seller?.id}`}><button className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">💬 Chat</button></Link>
+
+        </div>
+        {product.type !== "DOCUMENT" && product.type !== "QUIZ" && (
+          <Link href={`/messages?to=${product.seller?.id}`}>
+            <button className="inline-flex items-center justify-center h-9 px-4 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">💬 Chat</button>
+          </Link>
+        )}
+
       </div></Card>
       <Card className="p-4"><h3 className="font-semibold mb-2">Mô tả</h3><p className="text-sm text-muted-foreground whitespace-pre-wrap">{product.description}</p></Card>
-      {(product.address || product.university || product.city) && <Card className="p-4 text-sm space-y-1">
+      {product.type !== "DOCUMENT" && product.type !== "QUIZ" && (product.address || product.university || product.city) && <Card className="p-4 text-sm space-y-1">
         {product.address && <p>📍 Địa chỉ nhận / giao dịch: {product.address}</p>}
         {product.university && <p>�� {product.university}{(product as any).faculty ? ` - ${(product as any).faculty}` : ""}</p>}
         {product.city && <p>📍 {product.city}</p>}

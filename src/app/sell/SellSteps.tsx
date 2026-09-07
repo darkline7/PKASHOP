@@ -79,12 +79,14 @@ export function Step3({ form, setStep, handleSubmit, loading }: any) {
                 : "🎁 Pass đồ sinh viên (7 ngày tự xoá)"}
             </p>
           </div>
-          <div className="p-3 rounded-lg bg-muted/40 space-y-1">
-            <p className="text-xs text-muted-foreground font-medium">Địa chỉ & SĐT</p>
-            <p className="font-semibold text-foreground">
-              {form.address || "Tại Phenikaa"} {form.phone ? `(${form.phone})` : ""}
-            </p>
-          </div>
+          {form.type === "PHYSICAL" && (
+            <div className="p-3 rounded-lg bg-muted/40 space-y-1">
+              <p className="text-xs text-muted-foreground font-medium">Địa chỉ & SĐT</p>
+              <p className="font-semibold text-foreground">
+                {form.address || "Tại Phenikaa"} {form.phone ? `(${form.phone})` : ""}
+              </p>
+            </div>
+          )}
         </div>
 
         {form.proofImages && (

@@ -90,10 +90,12 @@ export function Step2UploadsSection({ form, setForm, set, handleRawQuizChange }:
         />
       </div>
 
-      <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
-        <Input label="Địa chỉ" placeholder="VD: KTX Tòa A Phenikaa" value={form.address} onChange={set("address")} />
-        <Input label="Số điện thoại" placeholder="VD: 0987654321" type="tel" value={form.phone} onChange={set("phone")} />
-      </div>
+      {form.type === "PHYSICAL" && (
+        <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-3">
+          <Input label="Địa chỉ nhận / giao dịch" placeholder="VD: KTX Tòa A Phenikaa" value={form.address} onChange={set("address")} />
+          <Input label="Số điện thoại" placeholder="VD: 0987654321" type="tel" value={form.phone} onChange={set("phone")} />
+        </div>
+      )}
     </>
   );
 }
