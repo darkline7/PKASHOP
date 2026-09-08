@@ -13,27 +13,42 @@ import {
   Wand2,
   AlertCircle,
   FileCheck,
+  Download,
 } from "lucide-react";
 import { useAuthStore } from "@/stores";
 import { formatVND } from "@/lib/utils";
+import FileUploadBox from "@/components/aicheck/FileUploadBox";
 
 interface AIHumanizerTabProps {
   initialText?: string;
+  initialFileName?: string;
   onRunCheckAgain?: (text: string) => void;
 }
 
 export default function AIHumanizerTab({
   initialText = "",
+  initialFileName,
   onRunCheckAgain,
 }: AIHumanizerTabProps) {
   const { user } = useAuthStore();
   const [inputText, setInputText] = useState(initialText);
   const [outputText, setOutputText] = useState("");
+  const [fileName, setFileName] = useState<string | undefined>(initialFileName);
   const [mode, setMode] = useState<"standard" | "academic" | "creative">("standard");
   const [loading, setLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [feeNotice, setFeeNotice] = useState<string | null>(null);
+
+  // Sync initialText if parent changes it
+  React.useEffect(() => {
+    if (initialText) setInputText(initialText);
+  }, [initialText]);
+
+  React.useEffect(() => {
+    if (initialFileName) setFileName(initialFileName);
+  }, [initialFileName]);
 
   const wordCount = inputText.trim() ? inputText.trim().split(/\s+/).filter(Boolean).length : 0;
   const outWordCount = outputText.trim() ? outputText.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -76,6 +91,42 @@ export default function AIHumanizerTab({
     navigator.clipboard.writeText(outputText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExportHumanizedDocx = async () => {
+    if (!outputText) return;
+    setIsExporting(true);
+    try {
+      const res = await fetch("/api/ai-check/file/export-humanized", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: fileName || "VanBan_DaSua.docx",
+          text: outputText,
+          mode,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Không thể xuất file Word đã sửa.");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = (fileName || "VanBan_DaSua.docx").replace(/\.[^/.]+$/, "");
+      a.download = `[DaSua-Humanized]_${baseName}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      alert(err?.message || "Lỗi khi tải file đã sửa.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -132,7 +183,7 @@ export default function AIHumanizerTab({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left: Original AI text */}
         <Card className="p-4 space-y-3 flex flex-col justify-between border-border bg-card">
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-foreground flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -141,8 +192,20 @@ export default function AIHumanizerTab({
               <span className="text-muted-foreground font-mono">{wordCount} từ</span>
             </div>
 
+            {/* Optional upload file box for Humanizer */}
+            <FileUploadBox
+              onFileLoaded={(text, fName) => {
+                setInputText(text);
+                setFileName(fName);
+              }}
+              currentFileName={fileName}
+              onClearFile={() => {
+                setFileName(undefined);
+              }}
+            />
+
             <textarea
-              rows={12}
+              rows={10}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Dán văn bản do ChatGPT / Gemini tạo ra tại đây để chuyển đổi sang giọng văn người thật..."
@@ -155,6 +218,7 @@ export default function AIHumanizerTab({
               onClick={() => {
                 setInputText("");
                 setOutputText("");
+                setFileName(undefined);
               }}
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
@@ -174,7 +238,7 @@ export default function AIHumanizerTab({
         </Card>
         {/* Right: Humanized result */}
         <Card className="p-4 space-y-3 flex flex-col justify-between border-border bg-card">
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -184,7 +248,7 @@ export default function AIHumanizerTab({
             </div>
 
             <textarea
-              rows={12}
+              rows={13}
               value={outputText}
               readOnly
               placeholder="Kết quả văn bản sau khi chuyển đổi tự nhiên sẽ xuất hiện tại đây..."
@@ -192,12 +256,26 @@ export default function AIHumanizerTab({
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-border/60">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
             <span className="text-[11px] text-muted-foreground">
               {outputText ? "✓ Đã phá vỡ khuôn mẫu AI" : "Chờ nhập liệu..."}
             </span>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {outputText && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportHumanizedDocx}
+                  isLoading={isExporting}
+                  className="text-xs font-semibold"
+                  title="Tải về file Word (.docx) tương tự chứa văn bản đã sửa"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                  <span>Tải file đã sửa (.docx)</span>
+                </Button>
+              )}
+
               {outputText && onRunCheckAgain && (
                 <Button
                   variant="outline"

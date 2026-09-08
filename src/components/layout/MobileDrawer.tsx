@@ -231,7 +231,7 @@ export default function MobileDrawer({
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary-500 animate-pulse" />
-                  <span>Check AI &amp; Humanize</span>
+                  <span>Check đạo văn &amp; AI</span>
                 </div>
                 <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-600 text-white font-extrabold uppercase">Mới</span>
               </Link>

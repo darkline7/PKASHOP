@@ -554,7 +554,7 @@ export default function Header() {
                   className="flex items-center gap-1.5 font-bold text-primary-600 dark:text-primary-400 hover:text-primary-700 transition-colors whitespace-nowrap bg-primary-500/10 px-2 py-0.5 rounded-md"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-primary-500" />
-                  <span>Check AI &amp; Humanize</span>
+                  <span>Check đạo văn &amp; AI</span>
                   <span className="px-1.5 py-0.2 rounded text-[9px] bg-primary-600 text-white font-extrabold uppercase">Mới</span>
                 </Link>
               </div>

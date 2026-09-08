@@ -207,9 +207,9 @@ export default function HomePage({
             </form>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3.5 mt-6 sm:mt-8 w-full sm:w-auto max-w-xs sm:max-w-none mx-auto">
-              <Link href="/marketplace" className="w-full sm:w-auto">
+              <Link href="/ai-check" className="w-full sm:w-auto">
                 <Button variant="gradient" size="lg" className="w-full shadow-md shadow-primary-500/25">
-                  <BookOpen className="w-4 h-4 mr-2" /> Khám phá tài liệu
+                  <Sparkles className="w-4 h-4 mr-2" /> Check đạo văn
                 </Button>
               </Link>
               <Link href="/sell" className="w-full sm:w-auto">

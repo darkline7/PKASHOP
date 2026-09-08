@@ -12,23 +12,27 @@ import {
   Copy,
   Check,
   RefreshCw,
+  Download,
 } from "lucide-react";
 import type { AIDetectorResult, SentenceAnalysis } from "@/lib/aiDetector";
 
 interface AICheckResultsProps {
   result: AIDetectorResult;
+  fileName?: string;
   onApplySuggestion: (sentenceId: number, newText: string) => void;
   onGoToHumanizer: (text: string) => void;
 }
 
 export default function AICheckResults({
   result,
+  fileName,
   onApplySuggestion,
   onGoToHumanizer,
 }: AICheckResultsProps) {
   const [selectedSentence, setSelectedSentence] = useState<SentenceAnalysis | null>(null);
   const [copied, setCopied] = useState(false);
   const [rewritingId, setRewritingId] = useState<number | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const { overallScore, isAiGenerated, label, verdict, stats, sentences } = result;
 
@@ -67,6 +71,40 @@ export default function AICheckResults({
     navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExportReportDocx = async () => {
+    setIsExporting(true);
+    try {
+      const res = await fetch("/api/ai-check/file/export-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: fileName || "VanBan_KiemTra.docx",
+          result,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Không thể xuất file báo cáo.");
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const baseName = (fileName || "VanBan_KiemTra.docx").replace(/\.[^/.]+$/, "");
+      a.download = `[KetQua-CheckAI]_${baseName}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err: any) {
+      alert(err?.message || "Lỗi khi tải file kết quả.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -157,12 +195,21 @@ export default function AICheckResults({
             </div>
           </div>
 
-          {/* Action CTA to Humanizer */}
-          {overallScore >= 40 && (
-            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border/40">
-              <span className="text-xs text-muted-foreground">
-                Muốn giảm % AI và viết lại tự nhiên như người thật?
-              </span>
+          {/* Action CTA to Humanizer & Export */}
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border/40">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExportReportDocx}
+              isLoading={isExporting}
+              className="text-xs font-semibold"
+              title="Tải về file Word (.docx) tương tự chứa kết quả phân tích & câu nghi vấn"
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5 text-primary-500" />
+              <span>Tải file kết quả (.docx)</span>
+            </Button>
+
+            {overallScore >= 40 && (
               <Button
                 size="sm"
                 variant="gradient"
@@ -171,23 +218,38 @@ export default function AICheckResults({
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Chuyển sang Humanizer <ArrowRight className="w-3.5 h-3.5 ml-1" />
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </Card>
       </div>
 
       {/* Interactive Highlighted Text Editor */}
       <Card className="p-5 space-y-4 bg-card border-border">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
           <div>
             <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
               <span>📝 Phân tích từng câu trong bài viết</span>
+              {fileName && (
+                <span className="text-[11px] font-normal px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                  {fileName}
+                </span>
+              )}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Bấm vào bất kỳ câu nào được tô màu để xem lý do và gợi ý viết lại tự nhiên.
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExportReportDocx}
+              isLoading={isExporting}
+              className="text-xs font-semibold"
+            >
+              <Download className="w-3.5 h-3.5 mr-1 text-primary-500" />
+              <span>Tải kết quả (.docx)</span>
+            </Button>
             <button
               onClick={copyFull}
               className="px-2.5 py-1.5 rounded-lg border border-border hover:bg-muted text-xs font-medium text-foreground flex items-center gap-1 transition-colors"

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import AICheckResults from "@/components/aicheck/AICheckResults";
 import AIHumanizerTab from "@/components/aicheck/AIHumanizerTab";
+import FileUploadBox from "@/components/aicheck/FileUploadBox";
 import { useAuthStore } from "@/stores";
 import { formatVND } from "@/lib/utils";
 import type { AIDetectorResult } from "@/lib/aiDetector";
@@ -32,6 +33,7 @@ export default function AICheckPage() {
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<"detector" | "humanizer">("detector");
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AIDetectorResult | null>(null);
@@ -130,10 +132,10 @@ export default function AICheckPage() {
             <span>PKASHOP Campus AI Hub</span>
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground">
-            Kiểm tra AI &amp; Viết lại tự nhiên
+            Kiểm tra Đạo văn &amp; Xác suất AI
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Phát hiện văn bản tạo bởi ChatGPT / Gemini / Claude bằng thuật toán Perplexity &amp; Burstiness, kèm công cụ Humanize chuẩn văn phong người thật.
+            Tải lên tài liệu Word/PDF hoặc dán bài viết để phát hiện AI &amp; đạo văn bằng thuật toán Perplexity &amp; Burstiness, kèm tính năng Humanize xuất file kết quả tự nhiên.
           </p>
         </div>
 
@@ -149,7 +151,7 @@ export default function AICheckPage() {
               }`}
             >
               <Search className="w-3.5 h-3.5" />
-              <span>1. Kiểm tra AI (Detector)</span>
+              <span>1. Kiểm tra Đạo văn &amp; AI</span>
             </button>
             <button
               onClick={() => setActiveTab("humanizer")}
@@ -189,18 +191,32 @@ export default function AICheckPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-foreground flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-primary-500" />
-                  Nhập văn bản cần kiểm tra AI
+                  Nhập văn bản hoặc tải file kiểm tra AI &amp; Đạo văn
                 </span>
                 <span className="text-muted-foreground font-mono">
                   {wordCount} từ · {wordCount <= 250 ? "Miễn phí" : "500đ / 1.000 từ"}
                 </span>
               </div>
 
+              {/* File Upload Box */}
+              <FileUploadBox
+                onFileLoaded={(loadedText, loadedName) => {
+                  setText(loadedText);
+                  setFileName(loadedName);
+                  setError(null);
+                  setResult(null);
+                }}
+                currentFileName={fileName}
+                onClearFile={() => {
+                  setFileName(null);
+                }}
+              />
+
               <textarea
                 rows={9}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Dán bài tiểu luận, báo cáo, đoạn văn bài viết hoặc tài liệu tại đây (tối thiểu 10 từ)..."
+                placeholder="Dán bài tiểu luận, báo cáo, đoạn văn bài viết hoặc tải file Word/PDF ở trên (tối thiểu 10 từ)..."
                 className="w-full rounded-xl border border-border bg-background p-3.5 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary-500 font-sans resize-y"
               />
 
@@ -262,6 +278,7 @@ export default function AICheckPage() {
             {result && (
               <AICheckResults
                 result={result}
+                fileName={fileName || undefined}
                 onApplySuggestion={handleApplySuggestion}
                 onGoToHumanizer={handleGoToHumanizer}
               />
@@ -272,6 +289,7 @@ export default function AICheckPage() {
         {activeTab === "humanizer" && (
           <AIHumanizerTab
             initialText={humanizerInputText || text}
+            initialFileName={fileName || undefined}
             onRunCheckAgain={handleRunCheckAgain}
           />
         )}

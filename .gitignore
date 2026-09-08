@@ -27,6 +27,11 @@ test_wal.js
 # Zip archives (don't push binaries)
 *.zip
 
+# Documents & uploads
+*.docx
+*.pdf
+
+
 # TypeScript build info
 tsconfig.tsbuildinfo
 
