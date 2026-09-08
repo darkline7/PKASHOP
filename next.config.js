@@ -5,6 +5,7 @@ const nextConfig = {
   // Optimize bundle size
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    serverComponentsExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
   },
   images: {
     remotePatterns: [

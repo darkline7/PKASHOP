@@ -29,10 +29,19 @@ export async function extractTextFromBuffer(
   } else if (ext === "pdf") {
     format = "pdf";
     try {
-      // Dynamic require to prevent bundling issues if on edge
+      // Dynamic require with inline worker to avoid Next.js bundling issues
       const { PDFParse } = require("pdf-parse");
+      try {
+        const { getData } = require("pdf-parse/worker");
+        PDFParse.setWorker(getData());
+      } catch (workerErr) {
+        console.warn("Could not set inline worker for PDFParse:", workerErr);
+      }
       const parser = new PDFParse({ data: buffer });
       const pdfResult = await parser.getText();
+      if (typeof parser.destroy === "function") {
+        await parser.destroy();
+      }
       extractedText = pdfResult?.text || "";
     } catch (err: any) {
       throw new Error(`Không thể đọc file PDF: ${err?.message || "File bị khóa hoặc định dạng không hỗ trợ"}`);

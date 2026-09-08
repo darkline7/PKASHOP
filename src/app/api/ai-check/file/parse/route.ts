@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     if (!parsed.text || parsed.text.trim().length === 0) {
       return NextResponse.json(
-        { error: "Không tìm thấy nội dung văn bản trong file tải lên." },
+        { error: "Không tìm thấy nội dung văn bản trong file tải lên. Lưu ý: Nếu là file PDF dạng ảnh scan, tài liệu cần có lớp chữ (selectable text)." },
         { status: 400 }
       );
     }
