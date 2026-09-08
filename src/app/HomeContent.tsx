@@ -218,25 +218,6 @@ export default function HomePage({
                 </Button>
               </Link>
             </div>
-
-            <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-border/60 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 max-w-4xl mx-auto">
-              <div className="p-2 sm:p-0 rounded-xl bg-card/40 sm:bg-transparent border border-border/40 sm:border-none">
-                <p className="text-xl sm:text-3xl font-black text-foreground">15,000+</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 font-medium">Tài liệu &amp; Đề thi</p>
-              </div>
-              <div className="p-2 sm:p-0 rounded-xl bg-card/40 sm:bg-transparent border border-border/40 sm:border-none">
-                <p className="text-xl sm:text-3xl font-black text-foreground">8,500+</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 font-medium">Sinh viên tin dùng</p>
-              </div>
-              <div className="p-2 sm:p-0 rounded-xl bg-card/40 sm:bg-transparent border border-border/40 sm:border-none">
-                <p className="text-xl sm:text-3xl font-black text-foreground">60+</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 font-medium">Trường ĐH cả nước</p>
-              </div>
-              <div className="p-2 sm:p-0 rounded-xl bg-card/40 sm:bg-transparent border border-border/40 sm:border-none">
-                <p className="text-xl sm:text-3xl font-black text-emerald-600">100%</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 font-medium">Giao dịch an toàn</p>
-              </div>
-            </div>
           </div>
         </section>
 
