@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { detectAIText } from "@/lib/aiDetector";
+import { calculateAICheckFee } from "@/lib/aiPricing";
 
 export async function POST(req: Request) {
   try {
@@ -23,23 +24,25 @@ export async function POST(req: Request) {
 
     const user = await getCurrentUser();
 
-    // Hạn mức kiểm tra:
-    // Dưới 250 từ: Miễn phí hoàn toàn cho sinh viên trải nghiệm
-    // Trên 250 từ: Tính phí tượng trưng 500đ / 1.000 từ trừ qua số dư Ví PKASHOP
-    let fee = 0;
-    if (words.length > 250) {
+    // Hạn mức kiểm tra AI theo chính sách giá:
+    // - Dưới 1.000 từ: Miễn phí
+    // - 1.000 – 5.000 từ: 2.000đ / 1.000 từ
+    // - 5.000 – 10.000 từ: 1.500đ / 1.000 từ
+    // - 10.000 – 30.000 từ: 1.000đ / 1.000 từ
+    // - Trên 30.000 từ: 800đ / 1.000 từ
+    const pricing = calculateAICheckFee(words.length);
+    let fee = pricing.fee;
+
+    if (!pricing.isFree) {
       if (!user) {
         return NextResponse.json(
           {
-            error: "Văn bản dài trên 250 từ yêu cầu đăng nhập tài khoản sinh viên PKASHOP để tiếp tục.",
+            error: `Văn bản dài ${words.length.toLocaleString("vi-VN")} từ (${pricing.tierLabel} - phí ${pricing.fee.toLocaleString("vi-VN")}đ) yêu cầu đăng nhập tài khoản sinh viên PKASHOP để tiếp tục.`,
             requireLogin: true,
           },
           { status: 401 }
         );
       }
-
-      // 500đ cho mỗi 1.000 từ (làm tròn lên)
-      fee = Math.max(500, Math.ceil(words.length / 1000) * 500);
 
       const freshUser = await prisma.user.findUnique({
         where: { id: user.id },
@@ -49,7 +52,7 @@ export async function POST(req: Request) {
       if (!freshUser || freshUser.walletBalance < fee) {
         return NextResponse.json(
           {
-            error: `Số dư ví không đủ (${fee.toLocaleString("vi-VN")}đ cho ${words.length} từ). Vui lòng nạp thêm tiền vào ví để kiểm tra tài liệu dài.`,
+            error: `Số dư ví không đủ (${fee.toLocaleString("vi-VN")}đ cho ${words.length.toLocaleString("vi-VN")} từ theo bảng giá: ${pricing.pricePerUnitText}). Vui lòng nạp thêm tiền vào ví để kiểm tra tài liệu dài.`,
             requireDeposit: true,
             feeRequired: fee,
             currentBalance: freshUser?.walletBalance || 0,
@@ -72,7 +75,7 @@ export async function POST(req: Request) {
             amount: -fee,
             balanceAfter: freshUser.walletBalance - fee,
             status: "SUCCESS",
-            description: `Dịch vụ Check AI & Đánh giá nội dung (${words.length} từ)`,
+            description: `Dịch vụ Check AI & Đánh giá nội dung (${words.length.toLocaleString("vi-VN")} từ - ${pricing.pricePerUnitText})`,
           },
         });
       });

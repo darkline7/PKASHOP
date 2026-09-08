@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from "@/stores";
 import { formatVND } from "@/lib/utils";
 import FileUploadBox from "@/components/aicheck/FileUploadBox";
+import { calculateAICheckFee } from "@/lib/aiPricing";
 
 interface AIHumanizerTabProps {
   initialText?: string;
@@ -52,6 +53,7 @@ export default function AIHumanizerTab({
 
   const wordCount = inputText.trim() ? inputText.trim().split(/\s+/).filter(Boolean).length : 0;
   const outWordCount = outputText.trim() ? outputText.trim().split(/\s+/).filter(Boolean).length : 0;
+  const pricing = calculateAICheckFee(wordCount);
 
   const handleHumanize = async () => {
     if (wordCount < 10) {
@@ -189,7 +191,15 @@ export default function AIHumanizerTab({
                 <span className="w-2 h-2 rounded-full bg-rose-500" />
                 Văn bản gốc (Nghi vấn AI)
               </span>
-              <span className="text-muted-foreground font-mono">{wordCount} từ</span>
+              <span className="text-muted-foreground font-mono flex items-center gap-1.5">
+                <span>{wordCount} từ</span>
+                <span>·</span>
+                {pricing.isFree ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Miễn phí</span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400 font-semibold">{pricing.description}</span>
+                )}
+              </span>
             </div>
 
             {/* Optional upload file box for Humanizer */}

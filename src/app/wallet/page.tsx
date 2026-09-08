@@ -28,6 +28,8 @@ export default function WalletPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
+      // Silently sync auto-bank to pick up any recent transfer
+      await fetch("/api/autobank/sync", { method: "POST" }).catch(() => {});
       const res = await fetch("/api/wallet");
       if (res.ok) {
         const d = await res.json();

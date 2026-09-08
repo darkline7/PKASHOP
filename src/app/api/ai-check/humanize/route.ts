@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { humanizeText, generateSentenceSuggestion } from "@/lib/aiDetector";
+import { calculateAICheckFee } from "@/lib/aiPricing";
 
 export async function POST(req: Request) {
   try {
@@ -30,22 +31,25 @@ export async function POST(req: Request) {
 
     const user = await getCurrentUser();
 
-    // Hạn mức Humanize:
-    // Dưới 150 từ: Miễn phí dùng thử
-    // Trên 150 từ: Phí 500đ / 500 từ
-    let fee = 0;
-    if (words.length > 150) {
+    // Hạn mức Humanize theo chính sách giá:
+    // - Dưới 1.000 từ: Miễn phí hoàn toàn
+    // - 1.000 – 5.000 từ: 2.000đ / 1.000 từ
+    // - 5.000 – 10.000 từ: 1.500đ / 1.000 từ
+    // - 10.000 – 30.000 từ: 1.000đ / 1.000 từ
+    // - Trên 30.000 từ: 800đ / 1.000 từ
+    const pricing = calculateAICheckFee(words.length);
+    let fee = pricing.fee;
+
+    if (!pricing.isFree) {
       if (!user) {
         return NextResponse.json(
           {
-            error: "Tính năng Viết lại tự nhiên (Humanize) toàn bài yêu cầu đăng nhập tài khoản sinh viên.",
+            error: `Tính năng Viết lại tự nhiên (Humanize) toàn bài (${words.length.toLocaleString("vi-VN")} từ - ${pricing.tierLabel} phí ${pricing.fee.toLocaleString("vi-VN")}đ) yêu cầu đăng nhập tài khoản sinh viên.`,
             requireLogin: true,
           },
           { status: 401 }
         );
       }
-
-      fee = Math.max(500, Math.ceil(words.length / 500) * 500);
 
       const freshUser = await prisma.user.findUnique({
         where: { id: user.id },
@@ -55,7 +59,7 @@ export async function POST(req: Request) {
       if (!freshUser || freshUser.walletBalance < fee) {
         return NextResponse.json(
           {
-            error: `Số dư ví không đủ (${fee.toLocaleString("vi-VN")}đ cho ${words.length} từ). Vui lòng nạp thêm tiền vào ví để viết lại văn bản dài.`,
+            error: `Số dư ví không đủ (${fee.toLocaleString("vi-VN")}đ cho ${words.length.toLocaleString("vi-VN")} từ theo bảng giá: ${pricing.pricePerUnitText}). Vui lòng nạp thêm tiền vào ví để viết lại văn bản dài.`,
             requireDeposit: true,
             feeRequired: fee,
             currentBalance: freshUser?.walletBalance || 0,
@@ -78,7 +82,7 @@ export async function POST(req: Request) {
             amount: -fee,
             balanceAfter: freshUser.walletBalance - fee,
             status: "SUCCESS",
-            description: `Dịch vụ Humanize AI & Viết lại tự nhiên (${words.length} từ)`,
+            description: `Dịch vụ Humanize AI & Viết lại tự nhiên (${words.length.toLocaleString("vi-VN")} từ - ${pricing.pricePerUnitText})`,
           },
         });
       });

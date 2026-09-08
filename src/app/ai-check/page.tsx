@@ -24,6 +24,7 @@ import FileUploadBox from "@/components/aicheck/FileUploadBox";
 import { useAuthStore } from "@/stores";
 import { formatVND } from "@/lib/utils";
 import type { AIDetectorResult } from "@/lib/aiDetector";
+import { calculateAICheckFee, AI_PRICING_TABLE } from "@/lib/aiPricing";
 
 const SAMPLE_AI_TEXT = `Trong bối cảnh hiện nay, công nghệ trí tuệ nhân tạo đang ngày càng trở nên phổ biến và đóng vai trò quan trọng trong việc thúc đẩy sự phát triển của giáo dục đại học. Hơn nữa, các công cụ học tập thông minh không chỉ mang lại nhiều lợi ích to lớn cho sinh viên trong việc tra cứu tài liệu mà còn góp phần không nhỏ vào việc nâng cao hiệu quả nghiên cứu khoa học. Bên cạnh đó, các trường đại học cũng đang tích cực triển khai các nền tảng số hóa nhằm tối ưu hóa quy trình quản lý học tập một cách toàn diện và bền vững. Tóm lại, việc áp dụng công nghệ là chìa khóa then chốt mở ra kỷ nguyên mới cho nền giáo dục tương lai.`;
 
@@ -40,6 +41,7 @@ export default function AICheckPage() {
   const [humanizerInputText, setHumanizerInputText] = useState("");
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const pricing = calculateAICheckFee(wordCount);
 
   const handleScan = async () => {
     if (wordCount < 10) {
@@ -178,6 +180,31 @@ export default function AICheckPage() {
           </div>
         </div>
 
+        {/* Pricing Tiers Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-muted/40 border border-border/60 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-foreground shrink-0">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Bảng giá dịch vụ:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/20">
+              &lt; 1.000 từ: Miễn phí
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-primary-500/10 text-primary-700 dark:text-primary-300 font-semibold border border-primary-500/20">
+              1k – 5k từ: 2k/1.000 từ
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 font-semibold border border-blue-500/20">
+              5k – 10k từ: 1,5k/1.000 từ
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/20">
+              10k – 30k từ: 1k/1.000 từ
+            </span>
+            <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/20">
+              &gt; 30k từ: 800đ/1.000 từ
+            </span>
+          </div>
+        </div>
+
         {error && (
           <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2 animate-in fade-in">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -193,8 +220,14 @@ export default function AICheckPage() {
                   <FileText className="w-4 h-4 text-primary-500" />
                   Nhập văn bản hoặc tải file kiểm tra AI &amp; Đạo văn
                 </span>
-                <span className="text-muted-foreground font-mono">
-                  {wordCount} từ · {wordCount <= 250 ? "Miễn phí" : "500đ / 1.000 từ"}
+                <span className="text-muted-foreground font-mono flex items-center gap-1.5">
+                  <span>{wordCount} từ</span>
+                  <span>·</span>
+                  {pricing.isFree ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Miễn phí</span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">{pricing.description}</span>
+                  )}
                 </span>
               </div>
 
