@@ -258,6 +258,38 @@ export default function AdminSettingsPage() {
             </Button>
           </div>
         </Card>
+        <Card className="p-5 space-y-4">
+          <h3 className="font-bold text-foreground text-sm border-b border-border/60 pb-2">
+            🤖 Cấu hình AI Core (Google Gemini API cho Check AI &amp; Humanizer)
+          </h3>
+          <div className="space-y-3">
+            <Input
+              label="Google Gemini API Key"
+              placeholder="AIzaSy..."
+              type="password"
+              value={settings["gemini_api_key"] || ""}
+              onChange={(e: any) =>
+                setSettings({ ...settings, gemini_api_key: e.target.value })
+              }
+            />
+            <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-3 space-y-1 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">💡 Lưu ý tính năng AI Core:</p>
+              <p>• Dùng để tăng cường thuật toán Viết lại tự nhiên (Humanizer) và phân tích sâu văn bản chống phát hiện AI.</p>
+              <p>• Nếu để trống, hệ thống sẽ tự động dùng bộ phân tích Perplexity &amp; Burstiness nội bộ (chạy offline 100% không phụ thuộc API ngoài).</p>
+            </div>
+            <Button
+              size="sm"
+              variant="gradient"
+              onClick={() =>
+                handleSaveSetting("gemini_api_key", settings["gemini_api_key"] || "")
+              }
+              isLoading={saving}
+            >
+              <Save className="w-3.5 h-3.5 mr-1" /> Lưu Gemini API Key
+            </Button>
+          </div>
+        </Card>
+
       </div>
     </>
   );

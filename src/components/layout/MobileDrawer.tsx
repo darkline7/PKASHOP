@@ -224,6 +224,18 @@ export default function MobileDrawer({
                 );
               })}
             </div>
+              <Link
+                href="/ai-check"
+                onClick={onClose}
+                className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold bg-primary-500/10 text-primary-600 border border-primary-500/20 hover:bg-primary-500/15 transition-colors mt-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary-500 animate-pulse" />
+                  <span>Check AI &amp; Humanize</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-600 text-white font-extrabold uppercase">Mới</span>
+              </Link>
+
           </div>
 
           {/* User Links */}
